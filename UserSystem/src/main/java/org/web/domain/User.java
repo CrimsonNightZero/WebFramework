@@ -1,8 +1,5 @@
 package org.web.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class User {
     private final int id;
     private final String email;
