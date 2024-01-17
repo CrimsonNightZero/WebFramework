@@ -1,4 +1,4 @@
-package org.web.domain;
+package org.web.domain.core;
 
 import java.util.Map;
 

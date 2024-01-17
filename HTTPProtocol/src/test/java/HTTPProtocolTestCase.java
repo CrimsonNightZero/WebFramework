@@ -1,6 +1,9 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.web.domain.*;
+import org.web.domain.core.HTTPMethod;
+import org.web.domain.core.HTTPRequest;
+import org.web.domain.core.HTTPResponse;
+import org.web.domain.core.HTTPServer;
 
 import java.util.HashMap;
 import java.util.List;
