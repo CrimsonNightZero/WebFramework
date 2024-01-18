@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,15 +9,26 @@ import java.util.List;
 import java.util.Map;
 
 public class HTTPProtocolTestCase {
+    private HTTPClient httpClient;
     private HTTPServer httpServer;
     @BeforeEach
     void setUp(){
+        SocketAddress socketAddress = new SocketAddress(80);
+        this.httpClient = new HTTPClient();
+        httpClient.connect(socketAddress);
+
         this.httpServer = new HTTPServer();
+        httpServer.listen(socketAddress);
         Router router = httpServer.getRouter();
         DomainController domainController = new DomainController();
         router.post("/api/users", domainController::post);
         router.patch("/api/users/1", domainController::patch);
         router.get("/api/users", domainController::get);
+    }
+    @AfterEach
+    void tearDown(){
+        httpClient.close();
+        httpServer.close();
     }
     /*
        Given
@@ -58,10 +70,9 @@ public class HTTPProtocolTestCase {
         body.put("name", "abc");
         body.put("password", "hello");
         httpRequest.setRequestBody(body);
-        httpRequest.setHttpServer(httpServer);
 
         // When
-        HTTPResponse response = httpServer.response(httpRequest);
+        HTTPResponse response = httpClient.send(httpRequest);
 
         // Then
         Assertions.assertEquals(201, response.getHttpStatusCode());
@@ -116,10 +127,9 @@ public class HTTPProtocolTestCase {
         Map<String, String> body = new HashMap<>();
         body.put("newName", "newAbc");
         httpRequest.setRequestBody(body);
-        httpRequest.setHttpServer(httpServer);
 
         // When
-        HTTPResponse response = httpServer.response(httpRequest);
+        HTTPResponse response = httpClient.send(httpRequest);
 
         // Then
         Assertions.assertEquals(200, response.getHttpStatusCode());
@@ -175,10 +185,9 @@ public class HTTPProtocolTestCase {
         httpRequest.setHttpHeaders(headers);
 
         httpRequest.setHttpQueryString("keyword=abc");
-        httpRequest.setHttpServer(httpServer);
 
         // When
-        HTTPResponse response = httpServer.response(httpRequest);
+        HTTPResponse response = httpClient.send(httpRequest);
 
         // Then
         Assertions.assertEquals(200, response.getHttpStatusCode());
@@ -237,7 +246,6 @@ public class HTTPProtocolTestCase {
         body.put("name", "efg");
         body.put("password", "hello");
         httpRequest.setRequestBody(body);
-        httpRequest.setHttpServer(httpServer);
 
         // When
         HTTPResponse response = httpServer.response(httpRequest);

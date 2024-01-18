@@ -8,7 +8,6 @@ public class HTTPRequest {
     private String httpQueryString;
     private Map<String, String> requestBody;
     private Map<String, String> httpHeaders;
-    private HTTPServer httpServer;
 
     public HTTPMethod getHttpMethod() {
         return httpMethod;
@@ -50,11 +49,4 @@ public class HTTPRequest {
         this.httpHeaders = httpHeaders;
     }
 
-    public void setHttpServer(HTTPServer httpServer) {
-        this.httpServer = httpServer;
-    }
-
-    public HTTPResponse send() {
-        return httpServer.response(this);
-    }
 }
