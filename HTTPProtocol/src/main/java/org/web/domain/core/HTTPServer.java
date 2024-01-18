@@ -1,16 +1,15 @@
 package org.web.domain.core;
 
+
 public class HTTPServer {
-    private final Router router;
     private HTTPListener httpPortListener;
     private SocketAddress socketAddress;
+    private HTTPHandler httpHandler;
 
-    public HTTPServer() {
-        this.router = new Router();
-    }
+    public HTTPServer() {}
 
-    public Router getRouter() {
-        return router;
+    public void createContext(HTTPHandler httpHandler){
+        this.httpHandler = httpHandler;
     }
 
     public void listen(SocketAddress socketAddress){
@@ -19,12 +18,12 @@ public class HTTPServer {
         this.socketAddress = socketAddress;
     }
 
+    public HTTPResponse response(HTTPRequest httpRequest){
+        return httpHandler.handle(httpRequest);
+    }
+
     public void close(){
         socketAddress.unsubscribe(httpPortListener);
         this.httpPortListener = null;
-    }
-
-    public HTTPResponse response(HTTPRequest httpRequest){
-        return router.execute(httpRequest);
     }
 }

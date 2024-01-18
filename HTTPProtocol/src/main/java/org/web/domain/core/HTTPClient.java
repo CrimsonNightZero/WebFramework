@@ -1,7 +1,6 @@
 package org.web.domain.core;
 
 public class HTTPClient {
-
     private SocketAddress socketAddress;
 
     public void connect(SocketAddress socketAddress){

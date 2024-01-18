@@ -8,23 +8,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HTTPProtocolTestCase {
+public class WebFrameworkTestCase {
     private HTTPClient httpClient;
-    private HTTPServer httpServer;
+    private WebApplication webApplication;
+
     @BeforeEach
     void setUp(){
         SocketAddress socketAddress = new SocketAddress(80);
         this.httpClient = new HTTPClient();
         httpClient.connect(socketAddress);
 
-        this.httpServer = new HTTPServer();
-        httpServer.listen(socketAddress);
-        httpServer.createContext(new DomainController());
+        this.webApplication = new WebApplication();
+        webApplication.listen(socketAddress);
+        Router router = webApplication.getRouter();
+        DomainController domainController = new DomainController();
+        router.post("/api/users", domainController::post);
+        router.patch("/api/users/1", domainController::patch);
+        router.get("/api/users", domainController::get);
     }
     @AfterEach
     void tearDown(){
         httpClient.close();
-        httpServer.close();
+        webApplication.close();
     }
     /*
        Given
@@ -244,7 +249,7 @@ public class HTTPProtocolTestCase {
         httpRequest.setRequestBody(body);
 
         // When
-        HTTPResponse response = httpServer.response(httpRequest);
+        HTTPResponse response = webApplication.response(httpRequest);
 
         // Then
         Assertions.assertEquals(400, response.getHttpStatusCode());

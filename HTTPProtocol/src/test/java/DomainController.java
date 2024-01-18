@@ -1,11 +1,32 @@
-package org.web.domain.core;
+import org.web.domain.core.HTTPHandler;
+import org.web.domain.core.HTTPMethod;
+import org.web.domain.core.HTTPRequest;
+import org.web.domain.core.HTTPResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DomainController {
+public class DomainController implements HTTPHandler {
+    @Override
+    public HTTPResponse handle(HTTPRequest httpRequest) {
+        if (httpRequest.getHttpPath().equals("/api/users")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)){
+                return post(httpRequest);
+            }
+            else if (httpRequest.getHttpMethod().equals(HTTPMethod.GET)){
+                return get(httpRequest);
+            }
+        }
+        else if (httpRequest.getHttpPath().equals("/api/users/1")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)){
+                return patch(httpRequest);
+            }
+        }
+
+        return null;
+    }
     public HTTPResponse post(HTTPRequest httpRequest) {
         try {
             validEmail(httpRequest.getRequestBody().get("email"));

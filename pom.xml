@@ -11,6 +11,7 @@
     <modules>
         <module>HTTPProtocol</module>
         <module>UserSystem</module>
+        <module>WebFrameworkCore</module>
     </modules>
 
     <properties>

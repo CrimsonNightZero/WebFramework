@@ -8,7 +8,7 @@ public class Main {
         HTTPClient httpClient = new HTTPClient();
         httpClient.connect(socketAddress);
 
-        HTTPServer httpServer = new HTTPServer();
-        httpServer.listen(socketAddress);
+        WebApplication webApplication = new WebApplication();
+        webApplication.listen(socketAddress);
     }
 }
