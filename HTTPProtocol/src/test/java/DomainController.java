@@ -28,8 +28,9 @@ public class DomainController implements HTTPHandler {
         return null;
     }
     public HTTPResponse post(HTTPRequest httpRequest) {
+        HTTPPOSTRequest httpPostRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
         try {
-            validEmail(httpRequest.getRequestBody().get("email"));
+            validEmail(httpPostRequest.email);
             return new HTTPResponse(201);
         }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);

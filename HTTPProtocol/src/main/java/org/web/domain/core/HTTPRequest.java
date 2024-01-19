@@ -1,13 +1,20 @@
 package org.web.domain.core;
 
+import org.web.domain.ext.TransformJsonBodyTypeHandler;
+import org.web.domain.ext.TransformXMLBodyTypeHandler;
+
 import java.util.Map;
 
 public class HTTPRequest {
     private HTTPMethod httpMethod;
     private String httpPath;
     private String httpQueryString;
-    private Map<String, String> requestBody;
+    private Object requestBody;
     private Map<String, String> httpHeaders;
+    private final TransformBodyTypeHandler transformBodyTypeHandler;
+    public HTTPRequest() {
+        transformBodyTypeHandler = new TransformJsonBodyTypeHandler(new TransformXMLBodyTypeHandler(null)) ;
+    }
 
     public HTTPMethod getHttpMethod() {
         return httpMethod;
@@ -33,11 +40,11 @@ public class HTTPRequest {
         this.httpQueryString = httpQueryString;
     }
 
-    public Map<String, String> getRequestBody() {
+    public Object getRequestBody() {
         return requestBody;
     }
 
-    public void setRequestBody(Map<String, String> requestBody) {
+    public void setRequestBody(Object requestBody) {
         this.requestBody = requestBody;
     }
 
@@ -49,4 +56,7 @@ public class HTTPRequest {
         this.httpHeaders = httpHeaders;
     }
 
+    public <T> T readBodyAsObject(Class<?> httpRequestClass){
+        return transformBodyTypeHandler.handle(httpHeaders.get("content-type"), requestBody, httpRequestClass);
+    }
 }

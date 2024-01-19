@@ -66,10 +66,16 @@ public class WebFrameworkTestCase {
         headers.put("content-type", "application/json");
         httpRequest.setHttpHeaders(headers);
 
-        Map<String, String> body = new HashMap<>();
-        body.put("email", "abc@gmail.com");
-        body.put("name", "abc");
-        body.put("password", "hello");
+        String email = "abc@gmail.com";
+        String name = "abc";
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "name": "%s",
+                   "password": "%s"
+               }
+                """, email, name, password);
         httpRequest.setRequestBody(body);
 
         // When
@@ -125,8 +131,12 @@ public class WebFrameworkTestCase {
         headers.put("Authorization", "Bearer <token>");
         httpRequest.setHttpHeaders(headers);
 
-        Map<String, String> body = new HashMap<>();
-        body.put("newName", "newAbc");
+        String newName = "newAbc";
+        String body = String.format("""
+               {
+                   "newName": "%s"
+               }
+                """, newName);
         httpRequest.setRequestBody(body);
 
         // When
@@ -242,10 +252,16 @@ public class WebFrameworkTestCase {
         headers.put("content-type", "application/json");
         httpRequest.setHttpHeaders(headers);
 
-        Map<String, String> body = new HashMap<>();
-        body.put("email", "efg");
-        body.put("name", "efg");
-        body.put("password", "hello");
+        String email = "efg";
+        String name = "efg";
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "name": "%s",
+                   "password": "%s"
+               }
+                """, email, name, password);
         httpRequest.setRequestBody(body);
 
         // When

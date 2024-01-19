@@ -9,7 +9,8 @@ import java.util.Map;
 public class DomainController {
     public HTTPResponse post(HTTPRequest httpRequest) {
         try {
-            validEmail(httpRequest.getRequestBody().get("email"));
+            HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+            validEmail(httpPOSTRequest.email);
             return new HTTPResponse(201);
         }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);
