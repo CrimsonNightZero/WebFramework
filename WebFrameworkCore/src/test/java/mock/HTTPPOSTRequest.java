@@ -1,6 +1,5 @@
-import jakarta.xml.bind.annotation.XmlRootElement;
+package mock;
 
-@XmlRootElement(name = "HTTPPOSTRequest")
 public class HTTPPOSTRequest {
     public String email;
     public String name;

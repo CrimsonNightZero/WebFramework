@@ -1,5 +1,5 @@
 package org.web.domain.core;
 
 public enum HTTPMethod {
-    GET, POST, PATCH
+    GET, POST, PATCH, DELETE
 }

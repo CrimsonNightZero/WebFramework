@@ -1,16 +1,41 @@
+package mock;
+
+import org.web.domain.core.HTTPHandler;
+import org.web.domain.core.HTTPMethod;
 import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
+import org.web.infrastructure.exceptions.NotAllowedMethodException;
+import org.web.infrastructure.exceptions.NotFindPathException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DomainController {
+public class DomainController implements HTTPHandler {
+    @Override
+    public HTTPResponse handle(HTTPRequest httpRequest) {
+        if (httpRequest.getHttpPath().equals("/api/users")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)){
+                return post(httpRequest);
+            }
+            else if (httpRequest.getHttpMethod().equals(HTTPMethod.GET)){
+                return get(httpRequest);
+            }
+            throw new NotAllowedMethodException();
+        }
+        else if (httpRequest.getHttpPath().equals("/api/users/1")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)){
+                return patch(httpRequest);
+            }
+            throw new NotAllowedMethodException();
+        }
+        throw new NotFindPathException();
+    }
     public HTTPResponse post(HTTPRequest httpRequest) {
+        HTTPPOSTRequest httpPostRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
         try {
-            HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
-            validEmail(httpPOSTRequest.email);
+            validEmail(httpPostRequest.email);
             return new HTTPResponse(201);
         }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);

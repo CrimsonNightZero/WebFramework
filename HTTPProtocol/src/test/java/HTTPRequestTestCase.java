@@ -23,7 +23,7 @@ public class HTTPRequestTestCase {
             httpRequest readBodyAsObject
 
         Then
-            HTTPPOSTRequest
+            mock.HTTPPOSTRequest
                email: "abc@gmail.com",
                name: "abc",
                password: "hello"
@@ -51,7 +51,7 @@ public class HTTPRequestTestCase {
         httpRequest.setRequestBody(body);
 
         // When
-        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+        mock.HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(mock.HTTPPOSTRequest.class);
 
         // Then
         Assertions.assertEquals(httpPOSTRequest.email, email);
@@ -78,7 +78,7 @@ public class HTTPRequestTestCase {
             httpRequest readBodyAsObject
 
         Then
-            HTTPPOSTRequest
+            mock.HTTPPOSTRequest
                email: "abc@gmail.com",
                name: "abc",
                password: "hello"
@@ -98,16 +98,16 @@ public class HTTPRequestTestCase {
         String password = "hello";
         String body = String.format("""
                 <?xml version="1.0" encoding="UTF-8"?>
-                <HTTPPOSTRequest>
+                <mock.mock.HTTPPOSTRequest>
                     <email>%s</email>
                     <name>%s</name>
                     <password>%s</password>
-                </HTTPPOSTRequest>
+                </mock.mock.HTTPPOSTRequest>
                 """, email, name, password);
         httpRequest.setRequestBody(body);
 
         // When
-        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+        mock.HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(mock.HTTPPOSTRequest.class);
 
         // Then
         Assertions.assertEquals(httpPOSTRequest.email, email);

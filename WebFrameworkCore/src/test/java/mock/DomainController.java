@@ -1,5 +1,5 @@
-import org.web.domain.core.HTTPHandler;
-import org.web.domain.core.HTTPMethod;
+package mock;
+
 import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
 
@@ -8,29 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DomainController implements HTTPHandler {
-    @Override
-    public HTTPResponse handle(HTTPRequest httpRequest) {
-        if (httpRequest.getHttpPath().equals("/api/users")){
-            if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)){
-                return post(httpRequest);
-            }
-            else if (httpRequest.getHttpMethod().equals(HTTPMethod.GET)){
-                return get(httpRequest);
-            }
-        }
-        else if (httpRequest.getHttpPath().equals("/api/users/1")){
-            if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)){
-                return patch(httpRequest);
-            }
-        }
-
-        return null;
-    }
+public class DomainController {
     public HTTPResponse post(HTTPRequest httpRequest) {
-        HTTPPOSTRequest httpPostRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
         try {
-            validEmail(httpPostRequest.email);
+            HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+            validEmail(httpPOSTRequest.email);
             return new HTTPResponse(201);
         }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);
