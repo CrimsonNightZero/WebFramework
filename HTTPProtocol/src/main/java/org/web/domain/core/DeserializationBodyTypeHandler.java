@@ -13,5 +13,5 @@ public abstract class DeserializationBodyTypeHandler {
 
     protected abstract boolean matchContentType(String contentType);
 
-    protected abstract String transform(Object responseBody);
+    protected abstract String transform(Object body);
 }

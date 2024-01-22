@@ -1,4 +1,4 @@
-package org.web.domain.ext;
+package org.web.domain.ext.protocol;
 
 import org.web.infrastructure.FileUtil;
 import org.web.domain.core.SerializationBodyTypeHandler;

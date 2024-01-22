@@ -49,7 +49,7 @@ public class HTTPRequestTestCase {
                    "password": "%s"
                }
                 """, email, name, password);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
@@ -105,7 +105,7 @@ public class HTTPRequestTestCase {
                     <password>%s</password>
                 </HTTPPOSTRequest>
                 """, email, name, password);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);

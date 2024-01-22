@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
-import org.web.domain.ext.exceptionshandler.NotAllowedMethodExceptionHandler;
-import org.web.domain.ext.exceptionshandler.NotFindPathExceptionHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -161,7 +159,7 @@ public class HandleExceptionTestCase {
                    "password" %d
                }
                 """, email, name, password);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);

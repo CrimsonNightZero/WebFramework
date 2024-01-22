@@ -72,7 +72,7 @@ public class HTTPProtocolTestCase {
                    "password": "%s"
                }
                 """, email, name, password);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -133,7 +133,7 @@ public class HTTPProtocolTestCase {
                    "newName": "%s"
                }
                 """, newName);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -144,10 +144,8 @@ public class HTTPProtocolTestCase {
         Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
         Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
         String responseBody = response.getResponseBody();
-//        Assertions.assertEquals(1, responseBody.get("id"));
-//        Assertions.assertEquals("abc@gmail.com", responseBody.get("email"));
-//        Assertions.assertEquals("newAbc", responseBody.get("name"));
-//        Assertions.assertEquals("hello", responseBody.get("password"));
+        Assertions.assertEquals("""
+                {"password":"hello","name":"newAbc","id":1,"email":"abc@gmail.com"}""", responseBody);
     }
 
     /*
@@ -202,10 +200,8 @@ public class HTTPProtocolTestCase {
         Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
         Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
         String responseBody = response.getResponseBody();
-//        Map<String, Object> item = responseBody.get(0);
-//        Assertions.assertEquals(1, item.get("id"));
-//        Assertions.assertEquals("abc@gmail.com", item.get("email"));
-//        Assertions.assertEquals("abc", item.get("name"));
+        Assertions.assertEquals("""
+               [{"name":"abc","id":1,"email":"abc@gmail.com"}]""", responseBody);
     }
 
     /*
@@ -258,7 +254,7 @@ public class HTTPProtocolTestCase {
                    "password": "%s"
                }
                 """, email, name, password);
-        httpRequest.setRequestBody(body);
+        httpRequest.setBody(body);
 
         // When
         HTTPResponse response = httpServer.response(httpRequest);

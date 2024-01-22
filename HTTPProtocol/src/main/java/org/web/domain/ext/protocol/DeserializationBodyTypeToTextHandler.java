@@ -1,4 +1,4 @@
-package org.web.domain.ext;
+package org.web.domain.ext.protocol;
 
 import org.web.domain.core.DeserializationBodyTypeHandler;
 
@@ -13,7 +13,7 @@ public class DeserializationBodyTypeToTextHandler extends DeserializationBodyTyp
     }
 
     @Override
-    protected String transform(Object responseBody) {
-        return (String)responseBody;
+    protected String transform(Object body) {
+        return (String) body;
     }
 }

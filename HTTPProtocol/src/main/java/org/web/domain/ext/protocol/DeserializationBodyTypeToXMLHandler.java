@@ -1,4 +1,4 @@
-package org.web.domain.ext;
+package org.web.domain.ext.protocol;
 
 import org.web.domain.core.DeserializationBodyTypeHandler;
 import org.web.infrastructure.FileUtil;
@@ -14,7 +14,7 @@ public class DeserializationBodyTypeToXMLHandler extends DeserializationBodyType
     }
 
     @Override
-    protected String transform(Object responseBody) {
-        return FileUtil.writeXMLValue(responseBody, responseBody.getClass());
+    protected String transform(Object body) {
+        return FileUtil.writeXMLValue(body, body.getClass());
     }
 }

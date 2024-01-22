@@ -1,7 +1,7 @@
 package org.web.domain.core;
 
-import org.web.domain.ext.exceptionshandler.NotAllowedMethodExceptionHandler;
-import org.web.domain.ext.exceptionshandler.NotFindPathExceptionHandler;
+import org.web.domain.ext.exceptions.NotAllowedMethodExceptionHandler;
+import org.web.domain.ext.exceptions.NotFindPathExceptionHandler;
 
 public class WebApplication extends HTTPServer {
     private final Router router;

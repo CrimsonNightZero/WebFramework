@@ -43,7 +43,7 @@ public class DomainController implements HTTPHandler {
             headers.put("content-type", "plain/text");
             headers.put("content-encoding", "UTF-8");
             httpResponse.setHttpHeaders(headers);
-            httpResponse.setResponseBody("Registration's format incorrect.");
+            httpResponse.setBody("Registration's format incorrect.");
             return httpResponse;
         }
     }
@@ -60,7 +60,7 @@ public class DomainController implements HTTPHandler {
         body.put("email", "abc@gmail.com");
         body.put("name", "newAbc");
         body.put("password", "hello");
-        httpResponse.setResponseBody(body);
+        httpResponse.setBody(body);
         return httpResponse;
     }
 
@@ -77,7 +77,7 @@ public class DomainController implements HTTPHandler {
         item.put("email", "abc@gmail.com");
         item.put("name", "abc");
         body.add(item);
-        httpResponse.setResponseBody(body);
+        httpResponse.setBody(body);
         return httpResponse;
     }
 

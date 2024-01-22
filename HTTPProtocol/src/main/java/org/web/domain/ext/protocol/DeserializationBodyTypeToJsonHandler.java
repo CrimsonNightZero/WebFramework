@@ -1,4 +1,4 @@
-package org.web.domain.ext;
+package org.web.domain.ext.protocol;
 
 import org.web.domain.core.DeserializationBodyTypeHandler;
 import org.web.infrastructure.FileUtil;
@@ -14,7 +14,7 @@ public class DeserializationBodyTypeToJsonHandler extends DeserializationBodyTyp
     }
 
     @Override
-    protected String transform(Object responseBody) {
-        return FileUtil.writeJsonValue(responseBody);
+    protected String transform(Object body) {
+        return FileUtil.writeJsonValue(body);
     }
 }
