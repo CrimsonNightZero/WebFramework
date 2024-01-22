@@ -1,3 +1,4 @@
+import mock.HTTPPOSTRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.HTTPRequest;
@@ -23,7 +24,7 @@ public class HTTPRequestTestCase {
             httpRequest readBodyAsObject
 
         Then
-            mock.HTTPPOSTRequest
+            HTTPPOSTRequest
                email: "abc@gmail.com",
                name: "abc",
                password: "hello"
@@ -51,7 +52,7 @@ public class HTTPRequestTestCase {
         httpRequest.setRequestBody(body);
 
         // When
-        mock.HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(mock.HTTPPOSTRequest.class);
+        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
 
         // Then
         Assertions.assertEquals(httpPOSTRequest.email, email);
@@ -78,7 +79,7 @@ public class HTTPRequestTestCase {
             httpRequest readBodyAsObject
 
         Then
-            mock.HTTPPOSTRequest
+            HTTPPOSTRequest
                email: "abc@gmail.com",
                name: "abc",
                password: "hello"
@@ -98,16 +99,16 @@ public class HTTPRequestTestCase {
         String password = "hello";
         String body = String.format("""
                 <?xml version="1.0" encoding="UTF-8"?>
-                <mock.mock.HTTPPOSTRequest>
+                <HTTPPOSTRequest>
                     <email>%s</email>
                     <name>%s</name>
                     <password>%s</password>
-                </mock.mock.HTTPPOSTRequest>
+                </HTTPPOSTRequest>
                 """, email, name, password);
         httpRequest.setRequestBody(body);
 
         // When
-        mock.HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(mock.HTTPPOSTRequest.class);
+        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
 
         // Then
         Assertions.assertEquals(httpPOSTRequest.email, email);

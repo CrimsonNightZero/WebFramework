@@ -1,7 +1,7 @@
 package org.web.domain.core;
 
-import org.web.domain.ext.TransformJsonBodyTypeHandler;
-import org.web.domain.ext.TransformXMLBodyTypeHandler;
+import org.web.domain.ext.SerializationBodyTypeToJsonHandler;
+import org.web.domain.ext.SerializationBodyTypeToXMLHandler;
 
 import java.util.Map;
 
@@ -11,9 +11,9 @@ public class HTTPRequest {
     private String httpQueryString;
     private Object requestBody;
     private Map<String, String> httpHeaders;
-    private final TransformBodyTypeHandler transformBodyTypeHandler;
+    private final SerializationBodyTypeHandler serializationBodyTypeHandler;
     public HTTPRequest() {
-        transformBodyTypeHandler = new TransformJsonBodyTypeHandler(new TransformXMLBodyTypeHandler(null)) ;
+        serializationBodyTypeHandler = new SerializationBodyTypeToJsonHandler(new SerializationBodyTypeToXMLHandler(null)) ;
     }
 
     public HTTPMethod getHttpMethod() {
@@ -57,6 +57,6 @@ public class HTTPRequest {
     }
 
     public <T> T readBodyAsObject(Class<?> httpRequestClass){
-        return transformBodyTypeHandler.handle(httpHeaders.get("content-type"), requestBody, httpRequestClass);
+        return serializationBodyTypeHandler.handle(httpHeaders.get("content-type"), requestBody, httpRequestClass);
     }
 }

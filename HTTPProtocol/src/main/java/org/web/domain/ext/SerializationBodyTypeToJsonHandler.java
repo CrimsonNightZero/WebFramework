@@ -1,11 +1,11 @@
 package org.web.domain.ext;
 
 import org.web.infrastructure.FileUtil;
-import org.web.domain.core.TransformBodyTypeHandler;
+import org.web.domain.core.SerializationBodyTypeHandler;
 
-public class TransformJsonBodyTypeHandler extends TransformBodyTypeHandler {
+public class SerializationBodyTypeToJsonHandler extends SerializationBodyTypeHandler {
 
-    public TransformJsonBodyTypeHandler(TransformBodyTypeHandler next) {
+    public SerializationBodyTypeToJsonHandler(SerializationBodyTypeHandler next) {
         super(next);
     }
 

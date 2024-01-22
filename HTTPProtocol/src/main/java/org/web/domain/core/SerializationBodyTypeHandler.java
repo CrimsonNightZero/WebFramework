@@ -1,11 +1,9 @@
 package org.web.domain.core;
 
-import java.util.Map;
+public abstract class SerializationBodyTypeHandler {
+    private final SerializationBodyTypeHandler next;
 
-public abstract class TransformBodyTypeHandler {
-    private final TransformBodyTypeHandler next;
-
-    public TransformBodyTypeHandler(TransformBodyTypeHandler next) {
+    public SerializationBodyTypeHandler(SerializationBodyTypeHandler next) {
         this.next = next;
     }
 
