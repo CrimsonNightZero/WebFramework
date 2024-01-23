@@ -1,9 +1,13 @@
 package org.web.domain.core;
 
 public abstract class TransformBodyTypeHandler {
-    private final TransformBodyTypeHandler next;
+    private TransformBodyTypeHandler next;
 
-    public TransformBodyTypeHandler(TransformBodyTypeHandler next) {
+    public TransformBodyTypeHandler() {
+        this.next = null;
+    }
+
+    public void setNext(TransformBodyTypeHandler next) {
         this.next = next;
     }
 

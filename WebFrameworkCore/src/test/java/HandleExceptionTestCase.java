@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
+import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +16,7 @@ public class HandleExceptionTestCase {
     private HTTPClient httpClient;
 
     @BeforeEach
-    void test(){
+    void setUp(){
         SocketAddress socketAddress = new SocketAddress(80);
         this.httpClient = new HTTPClient();
         httpClient.connect(socketAddress);
@@ -26,6 +29,9 @@ public class HandleExceptionTestCase {
         router.post("/api/users", domainController::post);
         router.patch("/api/users/1", domainController::patch);
         router.get("/api/users", domainController::get);
+        webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
+        webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
+        webApplication.addDataTypePlugin(new TransformBodyTypeToJsonHandler());
     }
 
     @AfterEach

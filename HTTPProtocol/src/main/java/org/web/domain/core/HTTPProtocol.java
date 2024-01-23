@@ -8,10 +8,10 @@ public abstract class HTTPProtocol {
     protected Map<String, String> httpHeaders;
 
     protected Object body;
-    private final TransformBodyTypeHandler transformBodyTypeHandler;
+    private TransformBodyTypeHandler transformBodyTypeHandler;
 
     public HTTPProtocol() {
-        this.transformBodyTypeHandler = new TransformBodyTypeToJsonHandler(new TransformBodyTypeToXMLHandler(new TransformBodyTypeToTextHandler(null)));
+        this.transformBodyTypeHandler = null;
     }
 
     public Map<String, String> getHttpHeaders() {
@@ -28,6 +28,10 @@ public abstract class HTTPProtocol {
 
     public void setBody(Object body) {
         this.body = body;
+    }
+
+    public void setTransformBodyTypeHandler(TransformBodyTypeHandler transformBodyTypeHandler){
+        this.transformBodyTypeHandler = transformBodyTypeHandler;
     }
 
     public <T> T serialization(Class<?> transformClass){

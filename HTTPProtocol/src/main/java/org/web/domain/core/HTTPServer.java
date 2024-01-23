@@ -1,6 +1,5 @@
 package org.web.domain.core;
 
-
 import org.web.domain.ext.HTTPListener;
 import org.web.domain.ext.exceptions.NotExpectedExecutionHandler;
 
@@ -9,6 +8,7 @@ public class HTTPServer {
     private SocketAddress socketAddress;
     private HTTPHandler httpHandler;
     protected ExceptionHandler exceptionHandler;
+    protected TransformBodyTypeHandler transformBodyTypeHandler;
 
     public HTTPServer() {
         this.exceptionHandler = new NotExpectedExecutionHandler();
@@ -29,13 +29,24 @@ public class HTTPServer {
         this.exceptionHandler = exceptionHandler;
     }
 
+    public void registerTransferDataType(TransformBodyTypeHandler transformBodyTypeHandler) {
+        transformBodyTypeHandler.setNext(this.transformBodyTypeHandler);
+        this.transformBodyTypeHandler = transformBodyTypeHandler;
+    }
+
     public HTTPResponse response(HTTPRequest httpRequest){
         try {
-            return httpHandler.handle(httpRequest);
+            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            HTTPResponse response = httpHandler.handle(httpRequest);
+            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            return response;
         }
         catch (Throwable ex){
             System.out.println(ex);
-            return exceptionHandler.handle(httpRequest, ex);
+            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
+            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            return response;
         }
     }
 

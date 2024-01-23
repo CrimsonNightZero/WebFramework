@@ -3,9 +3,6 @@ package org.web.domain.ext.protocol;
 import org.web.domain.core.TransformBodyTypeHandler;
 
 public class TransformBodyTypeToTextHandler extends TransformBodyTypeHandler {
-    public TransformBodyTypeToTextHandler(TransformBodyTypeHandler next) {
-        super(next);
-    }
 
     @Override
     protected boolean matchContentType(String contentType) {

@@ -2,6 +2,8 @@ import mock.HTTPPOSTRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.HTTPRequest;
+import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +52,7 @@ public class HTTPRequestTestCase {
                }
                 """, email, name, password);
         httpRequest.setBody(body);
+        httpRequest.setTransformBodyTypeHandler(new TransformBodyTypeToJsonHandler());
 
         // When
         HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
@@ -106,6 +109,7 @@ public class HTTPRequestTestCase {
                 </HTTPPOSTRequest>
                 """, email, name, password);
         httpRequest.setBody(body);
+        httpRequest.setTransformBodyTypeHandler(new TransformBodyTypeToXMLHandler());
 
         // When
         HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);

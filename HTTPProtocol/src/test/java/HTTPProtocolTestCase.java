@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
+import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +24,9 @@ public class HTTPProtocolTestCase {
         this.httpServer = new HTTPServer();
         httpServer.listen(socketAddress);
         httpServer.createContext(new DomainController());
+        httpServer.registerTransferDataType(new TransformBodyTypeToTextHandler());
+        httpServer.registerTransferDataType(new TransformBodyTypeToXMLHandler());
+        httpServer.registerTransferDataType(new TransformBodyTypeToJsonHandler());
     }
     @AfterEach
     void tearDown(){

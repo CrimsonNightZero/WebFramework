@@ -22,11 +22,25 @@ public class WebApplication extends HTTPServer {
 
     public HTTPResponse response(HTTPRequest httpRequest){
         try {
-            return router.execute(httpRequest);
+            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            HTTPResponse response = router.execute(httpRequest);
+            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            return response;
         }
         catch (Throwable ex){
             System.out.println(ex);
-            return exceptionHandler.handle(httpRequest, ex);
+            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
+            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
+            return response;
         }
+    }
+
+    public void addException(ExceptionHandler exceptionHandler){
+        registerException(exceptionHandler);
+    }
+
+    public void addDataTypePlugin(TransformBodyTypeHandler transformBodyTypeHandler) {
+        registerTransferDataType(transformBodyTypeHandler);
     }
 }

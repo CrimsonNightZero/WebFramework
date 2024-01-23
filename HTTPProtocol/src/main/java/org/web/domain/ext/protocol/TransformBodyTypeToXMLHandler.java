@@ -4,9 +4,6 @@ import org.web.domain.core.TransformBodyTypeHandler;
 import org.web.infrastructure.FileUtil;
 
 public class TransformBodyTypeToXMLHandler extends TransformBodyTypeHandler {
-    public TransformBodyTypeToXMLHandler(TransformBodyTypeHandler next) {
-        super(next);
-    }
 
     @Override
     protected boolean matchContentType(String contentType) {
