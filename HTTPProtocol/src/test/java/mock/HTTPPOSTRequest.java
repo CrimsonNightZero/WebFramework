@@ -2,7 +2,7 @@ package mock;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "mock.HTTPPOSTRequest")
+@XmlRootElement(name = "HTTPPOSTRequest")
 public class HTTPPOSTRequest {
     public String email;
     public String name;

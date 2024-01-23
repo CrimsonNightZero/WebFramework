@@ -6,13 +6,12 @@ import java.util.Map;
 
 public abstract class HTTPProtocol {
     protected Map<String, String> httpHeaders;
+
     protected Object body;
-    private final SerializationBodyTypeHandler serializationBodyTypeHandler;
-    private final DeserializationBodyTypeHandler deserializationBodyTypeHandler;
+    private final TransformBodyTypeHandler transformBodyTypeHandler;
 
     public HTTPProtocol() {
-        this.serializationBodyTypeHandler = new SerializationBodyTypeToJsonHandler(new SerializationBodyTypeToXMLHandler(null));
-        this.deserializationBodyTypeHandler = new DeserializationBodyTypeToJsonHandler(new DeserializationBodyTypeToXMLHandler(new DeserializationBodyTypeToTextHandler(null)));
+        this.transformBodyTypeHandler = new TransformBodyTypeToJsonHandler(new TransformBodyTypeToXMLHandler(new TransformBodyTypeToTextHandler(null)));
     }
 
     public Map<String, String> getHttpHeaders() {
@@ -31,11 +30,11 @@ public abstract class HTTPProtocol {
         this.body = body;
     }
 
-    public <T> T serialization(Class<?> httpRequestClass){
-        return serializationBodyTypeHandler.handle(httpHeaders.get("content-type"), body, httpRequestClass);
+    public <T> T serialization(Class<?> transformClass){
+        return transformBodyTypeHandler.serialize(httpHeaders.get("content-type"), body, transformClass);
     }
 
     public String deserialization() {
-        return deserializationBodyTypeHandler.handle(httpHeaders.get("content-type"), body);
+        return transformBodyTypeHandler.deserialize(httpHeaders.get("content-type"), body);
     }
 }
