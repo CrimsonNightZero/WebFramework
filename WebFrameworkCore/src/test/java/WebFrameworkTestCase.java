@@ -1,15 +1,18 @@
 import mock.DomainController;
+import mock.DomainService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
+import org.web.domain.ext.HTTPRequestScope;
+import org.web.domain.ext.PrototypeScope;
+import org.web.domain.ext.SingletonScope;
 import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class WebFrameworkTestCase {
@@ -24,11 +27,16 @@ public class WebFrameworkTestCase {
 
         this.webApplication = new WebApplication();
         webApplication.listen(socketAddress);
+
+        Container container = webApplication.getContainer();
+        container.register(DomainController.class, new SingletonScope());
+        container.register(DomainService.class, new PrototypeScope());
+
         Router router = webApplication.getRouter();
-        DomainController domainController = new DomainController();
-        router.post("/api/users", domainController::post);
-        router.patch("/api/users/1", domainController::patch);
-        router.get("/api/users", domainController::get);
+        router.post("/api/users", DomainController.class, "post");
+        router.patch("/api/users/1", DomainController.class, "patch");
+        router.get("/api/users", DomainController.class, "get");
+
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToJsonHandler());

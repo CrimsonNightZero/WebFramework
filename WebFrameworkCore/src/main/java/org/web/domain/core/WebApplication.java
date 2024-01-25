@@ -4,10 +4,13 @@ import org.web.domain.ext.exceptions.NotAllowedMethodExceptionHandler;
 import org.web.domain.ext.exceptions.NotFindPathExceptionHandler;
 
 public class WebApplication extends HTTPServer {
+    private final Container container;
     private final Router router;
 
     public WebApplication() {
+        this.container = new Container();
         this.router = new Router();
+        router.setWebApplication(this);
         registerBaseException();
     }
 
@@ -20,6 +23,10 @@ public class WebApplication extends HTTPServer {
         return router;
     }
 
+    public Container getContainer() {
+        return container;
+    }
+
     public HTTPResponse response(HTTPRequest httpRequest){
         try {
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
@@ -28,7 +35,6 @@ public class WebApplication extends HTTPServer {
             return response;
         }
         catch (Throwable ex){
-            System.out.println(ex);
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
             HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
             response.setTransformBodyTypeHandler(transformBodyTypeHandler);

@@ -9,10 +9,24 @@ import java.util.List;
 import java.util.Map;
 
 public class DomainController {
+    public DomainService domainService;
+
+    public DomainController(DomainService domainService) {
+        this.domainService = domainService;
+    }
+
+    public void setDomainService(DomainService domainService) {
+        this.domainService = domainService;
+    }
+
+    public DomainService getDomainService() {
+        return domainService;
+    }
+
     public HTTPResponse post(HTTPRequest httpRequest) {
         try {
             HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
-            validEmail(httpPOSTRequest.email);
+            domainService.validEmail(httpPOSTRequest);
             return new HTTPResponse(201);
         }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);
@@ -56,11 +70,5 @@ public class DomainController {
         body.add(item);
         httpResponse.setBody(body);
         return httpResponse;
-    }
-
-    private void validEmail(String email){
-        if (!email.contains("@")){
-            throw new IllegalArgumentException("Illegal Email");
-        }
     }
 }
