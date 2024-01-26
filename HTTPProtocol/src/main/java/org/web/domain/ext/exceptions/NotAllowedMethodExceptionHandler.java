@@ -16,7 +16,7 @@ public class NotAllowedMethodExceptionHandler extends ExceptionHandler {
     }
 
     @Override
-    protected HTTPResponse response(HTTPRequest httpRequest) {
+    protected HTTPResponse response(HTTPRequest httpRequest, Throwable throwable) {
         HTTPResponse httpResponse = new HTTPResponse(405);
         Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "plain/text");

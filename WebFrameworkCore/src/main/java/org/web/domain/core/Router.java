@@ -20,7 +20,7 @@ public class Router {
         this.container = webApplication.getContainer();
     }
 
-    public HTTPResponse execute(HTTPRequest httpRequest) {
+    public HTTPResponse execute(HTTPRequest httpRequest) throws Throwable {
         container.refresh(WebApplicationScope.HTTP_REQUEST);
         if(!route.containsKey(httpRequest.getHttpPath())){
             throw new NotFindPathException();
@@ -32,14 +32,13 @@ public class Router {
         return invokeControllerMethod(httpRequest);
     }
 
-    private HTTPResponse invokeControllerMethod(HTTPRequest httpRequest){
+    private HTTPResponse invokeControllerMethod(HTTPRequest httpRequest) throws Throwable {
         Method method = route.get(httpRequest.getHttpPath()).get(httpRequest.getHttpMethod());
-        try {
-
-            Object object = container.get(method.getDeclaringClass());
+        Object object = container.get(method.getDeclaringClass());
+        try{
             return (HTTPResponse) method.invoke(object, httpRequest);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+        }catch (Exception ex){
+            throw ex.getCause();
         }
     }
 

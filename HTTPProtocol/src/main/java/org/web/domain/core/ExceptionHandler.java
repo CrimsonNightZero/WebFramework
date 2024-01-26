@@ -13,7 +13,7 @@ public abstract class ExceptionHandler {
 
     public HTTPResponse handle(HTTPRequest httpRequest, Throwable throwable){
         if (matchThrownException(throwable)){
-            return response(httpRequest);
+            return response(httpRequest, throwable);
         }
         else {
             return next.handle(httpRequest, throwable);
@@ -22,5 +22,5 @@ public abstract class ExceptionHandler {
 
     protected abstract boolean matchThrownException(Throwable throwable);
 
-    protected abstract HTTPResponse response(HTTPRequest httpRequest);
+    protected abstract HTTPResponse response(HTTPRequest httpRequest, Throwable throwable);
 }
