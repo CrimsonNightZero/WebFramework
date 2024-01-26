@@ -1,6 +1,51 @@
+import org.web.infrastructure.DomainController;
+import org.web.application.DomainService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.web.domain.core.*;
+import org.web.domain.ext.SingletonScope;
+import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
+import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
+import org.web.infrastructure.exceptions.DuplicateEmailHandler;
+import org.web.infrastructure.exceptions.IncorrectFormatOfRegistrationHandler;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class WebAPPTestCase {
+    private HTTPClient httpClient;
+    private WebApplication webApplication;
+
+    @BeforeEach
+    void setUp(){
+        SocketAddress socketAddress = new SocketAddress(80);
+        this.httpClient = new HTTPClient();
+        httpClient.connect(socketAddress);
+
+        this.webApplication = new WebApplication();
+        webApplication.listen(socketAddress);
+
+        Container container = webApplication.getContainer();
+        container.register(DomainController.class, new SingletonScope());
+        container.register(DomainService.class, new SingletonScope());
+
+        Router router = webApplication.getRouter();
+        router.post("/api/users", DomainController.class, "registerUser");
+        router.patch("/api/users/1", DomainController.class, "patch");
+        router.get("/api/users", DomainController.class, "get");
+
+        webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
+        webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
+        webApplication.addDataTypePlugin(new TransformBodyTypeToJsonHandler());
+    }
+    @AfterEach
+    void tearDown(){
+        httpClient.close();
+        webApplication.close();
+    }
 
     /*
         Given
@@ -22,7 +67,7 @@ public class WebAPPTestCase {
 
         Then
             HTTP
-                status code: 200
+                status code: 201
                 headers:
                     content-type: application/json
                     content-encoding: UTF-8
@@ -36,10 +81,41 @@ public class WebAPPTestCase {
      */
     @Test
     void UserRegistration(){
+        // Given
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.POST);
+
+        httpRequest.setHttpPath("/api/users");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        httpRequest.setHttpHeaders(headers);
+
+        String email = "abc@gmail.com";
+        String name = "abc";
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "name": "%s",
+                   "password": "%s"
+               }
+                """, email, name, password);
+        httpRequest.setBody(body);
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(201, response.getHttpStatusCode());
+        Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
+        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        Assertions.assertEquals("""
+                {"id":1,"email":"abc@gmail.com","name":"abc"}""", response.getResponseBody());
     }
 
     /*
-        // {statusCode: 400, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Duplicate email}
         // {statusCode: 400, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Registration's format incorrect.}
         Given
             HTTP
@@ -60,14 +136,113 @@ public class WebAPPTestCase {
 
         Then
             HTTP
-                status code: {statusCode}
-                headers: {headers}
-
-            User info: {responseBody}
+                status code: 400
+                headers:
+                {
+                    content-type: plain/text,
+                    content-encoding: UTF-8
+                }
+                responseBody: Duplicate email
      */
     @Test
-    void UserRegistrationOnFail(){
+    void UserRegistrationOnDuplicateEmailFail(){
+        // Given
+        webApplication.addException(new DuplicateEmailHandler());
+        HTTPRequest httpRequest = new HTTPRequest();
 
+        httpRequest.setHttpMethod(HTTPMethod.POST);
+
+        httpRequest.setHttpPath("/api/users");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        httpRequest.setHttpHeaders(headers);
+
+        String email = "abc@gmail.com";
+        String name = "abc";
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "name": "%s",
+                   "password": "%s"
+               }
+                """, email, name, password);
+        httpRequest.setBody(body);
+
+        // When
+        httpClient.send(httpRequest);
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(400, response.getHttpStatusCode());
+        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
+        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        Assertions.assertEquals("Duplicate email", response.getResponseBody());
+    }
+
+    /*
+        Given
+            HTTP
+                headers:
+                    content-type: application/json
+                method: POST
+                path: /api/users
+
+            User info:
+            {
+                "email": "abc",
+                "name": "abc",
+                "password": "hello",
+            }
+
+        When
+            Register a user
+
+        Then
+            HTTP
+                status code: 400
+                headers:
+                {
+                    content-type: plain/text,
+                    content-encoding: UTF-8
+                }
+                responseBody: Registration's format incorrect.
+     */
+    @Test
+    void UserRegistrationOnIncorrectFormatOfRegistrationFail(){
+        // Given
+        webApplication.addException(new IncorrectFormatOfRegistrationHandler());
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.POST);
+
+        httpRequest.setHttpPath("/api/users");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        httpRequest.setHttpHeaders(headers);
+
+        String email = "abc";
+        String name = "abc";
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "name": "%s",
+                   "password": "%s"
+               }
+                """, email, name, password);
+        httpRequest.setBody(body);
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(400, response.getHttpStatusCode());
+        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
+        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        Assertions.assertEquals("Registration's format incorrect.", response.getResponseBody());
     }
 
     /*

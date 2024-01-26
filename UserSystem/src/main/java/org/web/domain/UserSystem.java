@@ -1,7 +1,10 @@
 package org.web.domain;
 
+import org.web.domain.exceptions.DuplicateEmailException;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -13,6 +16,9 @@ public class UserSystem {
     }
 
     public void register(String email, String name, String password){
+        if (Objects.nonNull(queryByEmail(email))){
+            throw new DuplicateEmailException("Duplicate email");
+        }
         users.add(new User(users.size() + 1, email, name, password));
     }
 
@@ -39,5 +45,9 @@ public class UserSystem {
 
     public List<User> query(String keyword){
         return users.stream().filter(user -> user.getName().equals(keyword)).collect(Collectors.toList());
+    }
+
+    public User queryByEmail(String email){
+        return users.stream().filter(user -> user.getEmail().equals(email)).findFirst().orElse(null);
     }
 }
