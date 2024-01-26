@@ -1,3 +1,8 @@
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.web.application.HTTPLoginResponse;
+import org.web.domain.exceptions.IncorrectFormatOfEmailException;
 import org.web.infrastructure.DomainController;
 import org.web.application.DomainService;
 import org.junit.jupiter.api.AfterEach;
@@ -9,11 +14,14 @@ import org.web.domain.ext.SingletonScope;
 import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
+import org.web.infrastructure.FileUtil;
+import org.web.infrastructure.exceptions.CredentialsInvalidHandler;
 import org.web.infrastructure.exceptions.DuplicateEmailHandler;
-import org.web.infrastructure.exceptions.IncorrectFormatOfRegistrationHandler;
+import org.web.infrastructure.exceptions.IncorrectFormatOfEmailHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class WebAPPTestCase {
     private HTTPClient httpClient;
@@ -34,6 +42,7 @@ public class WebAPPTestCase {
 
         Router router = webApplication.getRouter();
         router.post("/api/users", DomainController.class, "registerUser");
+        router.post("/api/users/login", DomainController.class, "login");
         router.patch("/api/users/1", DomainController.class, "patch");
         router.get("/api/users", DomainController.class, "get");
 
@@ -82,27 +91,7 @@ public class WebAPPTestCase {
     @Test
     void UserRegistration(){
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
-        String email = "abc@gmail.com";
-        String name = "abc";
-        String password = "hello";
-        String body = String.format("""
-               {
-                   "email": "%s",
-                   "name": "%s",
-                   "password": "%s"
-               }
-                """, email, name, password);
-        httpRequest.setBody(body);
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -148,27 +137,7 @@ public class WebAPPTestCase {
     void UserRegistrationOnDuplicateEmailFail(){
         // Given
         webApplication.addException(new DuplicateEmailHandler());
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
-        String email = "abc@gmail.com";
-        String name = "abc";
-        String password = "hello";
-        String body = String.format("""
-               {
-                   "email": "%s",
-                   "name": "%s",
-                   "password": "%s"
-               }
-                """, email, name, password);
-        httpRequest.setBody(body);
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com");
 
         // When
         httpClient.send(httpRequest);
@@ -179,6 +148,31 @@ public class WebAPPTestCase {
         Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
         Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
         Assertions.assertEquals("Duplicate email", response.getResponseBody());
+    }
+
+    private static HTTPRequest getHttpRegisterRequest(String mail) {
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.POST);
+
+        httpRequest.setHttpPath("/api/users");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        httpRequest.setHttpHeaders(headers);
+
+        String email = mail;
+        String name = "abc";
+        String password = "hello";
+        String body = String.format("""
+                {
+                    "email": "%s",
+                    "name": "%s",
+                    "password": "%s"
+                }
+                 """, email, name, password);
+        httpRequest.setBody(body);
+        return httpRequest;
     }
 
     /*
@@ -212,28 +206,8 @@ public class WebAPPTestCase {
     @Test
     void UserRegistrationOnIncorrectFormatOfRegistrationFail(){
         // Given
-        webApplication.addException(new IncorrectFormatOfRegistrationHandler());
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
-        String email = "abc";
-        String name = "abc";
-        String password = "hello";
-        String body = String.format("""
-               {
-                   "email": "%s",
-                   "name": "%s",
-                   "password": "%s"
-               }
-                """, email, name, password);
-        httpRequest.setBody(body);
+        webApplication.addException(new IncorrectFormatOfEmailHandler());
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -279,12 +253,50 @@ public class WebAPPTestCase {
      */
     @Test
     void UserLogin(){
+        // Given
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
 
+        HTTPRequest httpRequest = getHttpLoginRequest("abc@gmail.com");
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(200, response.getHttpStatusCode());
+        Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
+        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(response.getResponseBody(), HTTPLoginResponse.class);
+        Assertions.assertEquals(1, httpLoginResponse.id);
+        Assertions.assertEquals("abc", httpLoginResponse.name);
+        Assertions.assertEquals("abc@gmail.com", httpLoginResponse.email);
+        Assertions.assertNotNull(httpLoginResponse.token);
+    }
+
+    private static HTTPRequest getHttpLoginRequest(String email) {
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.POST);
+
+        httpRequest.setHttpPath("/api/users/login");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        httpRequest.setHttpHeaders(headers);
+
+        String password = "hello";
+        String body = String.format("""
+               {
+                   "email": "%s",
+                   "password": "%s"
+               }
+                """, email, password);
+        httpRequest.setBody(body);
+        return httpRequest;
     }
 
     /*
-        // {statusCode: 400, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Credentials Invalid}
-        // {statusCode: 400, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Login's format incorrect.}
+        // {email: "def@gmail.com", statusCode: 400, responseBody: Credentials Invalid}
+        // {email: "abc", statusCode: 400, responseBody: Login's format incorrect.}
         Given
             HTTP
                 headers:
@@ -294,7 +306,7 @@ public class WebAPPTestCase {
 
             User info:
             {
-                "email": "abc@gmail.com",
+                "email": {email},
                 "password": "hello",
             }
 
@@ -308,9 +320,30 @@ public class WebAPPTestCase {
 
             User info: {responseBody}
      */
-    @Test
-    void userLoginOnFail(){
+    @ParameterizedTest
+    @MethodSource
+    void userLoginOnFail(String email, int statusCode, String responseBody, ExceptionHandler exceptionHandler){
+        // Given
+        webApplication.addException(exceptionHandler);
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
 
+        HTTPRequest httpRequest = getHttpLoginRequest(email);
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(statusCode, response.getHttpStatusCode());
+        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
+        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        Assertions.assertEquals(responseBody, response.getResponseBody());
+    }
+
+    private static Stream<Arguments> userLoginOnFail(){
+        return Stream.of(
+                Arguments.of("def@gmail.com", 400, "Credentials Invalid", new CredentialsInvalidHandler()),
+                Arguments.of("abd", 400, "Login's format incorrect.", new IncorrectFormatOfEmailHandler())
+        );
     }
 
     /*

@@ -35,6 +35,8 @@ public class WebApplication extends HTTPServer {
             return response;
         }
         catch (Throwable ex){
+            System.out.println(ex);
+            ex.printStackTrace();
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
             HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
             response.setTransformBodyTypeHandler(transformBodyTypeHandler);

@@ -1,5 +1,6 @@
 package org.web.domain;
 
+import org.web.domain.exceptions.CredentialsInvalidException;
 import org.web.domain.exceptions.DuplicateEmailException;
 
 import java.util.ArrayList;
@@ -22,12 +23,16 @@ public class UserSystem {
         users.add(new User(users.size() + 1, email, name, password));
     }
 
-    public void login(String email, String password){
-        Optional<User> user = getUser(email, password);
+    public User login(String email, String password){
+        User user = getUser(email, password);
+        if (Objects.isNull(user)){
+            throw new CredentialsInvalidException("Credentials Invalid");
+        }
+        return user;
     }
 
-    private Optional<User> getUser(String email, String password){
-        return users.stream().filter(user -> user.getEmail().equals(email) && user.getPassword().equals(password)).findFirst();
+    private User getUser(String email, String password){
+        return users.stream().filter(user -> user.getEmail().equals(email) && user.getPassword().equals(password)).findFirst().orElse(null);
     }
 
     public void rename(int userId, String name){

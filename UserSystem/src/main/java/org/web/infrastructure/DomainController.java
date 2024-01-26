@@ -1,9 +1,7 @@
 package org.web.infrastructure;
 
 
-import org.web.application.DomainService;
-import org.web.application.HTTPPOSTRequest;
-import org.web.application.HTTPPOSTResponse;
+import org.web.application.*;
 import org.web.domain.User;
 import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
@@ -41,6 +39,21 @@ public class DomainController {
         httpResponse.setBody(new HTTPPOSTResponse(user.getId(), user.getEmail(), user.getName()));
         return httpResponse;
     }
+
+    public HTTPResponse login(HTTPRequest httpRequest) {
+        HTTPLoginRequest httpLoginRequest = httpRequest.readBodyAsObject(HTTPLoginRequest.class);
+
+        User user = domainService.login(httpLoginRequest);
+
+        HTTPResponse httpResponse = new HTTPResponse(200);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        headers.put("content-encoding", "UTF-8");
+        httpResponse.setHttpHeaders(headers);
+        httpResponse.setBody(new HTTPLoginResponse(user.getId(), user.getEmail(), user.getName()));
+        return httpResponse;
+    }
+
 
     public HTTPResponse patch(HTTPRequest httpRequest) {
         HTTPResponse httpResponse = new HTTPResponse(200);

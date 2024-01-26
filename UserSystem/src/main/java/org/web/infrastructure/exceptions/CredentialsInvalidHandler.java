@@ -3,15 +3,15 @@ package org.web.infrastructure.exceptions;
 import org.web.domain.core.ExceptionHandler;
 import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
-import org.web.domain.exceptions.IncorrectFormatOfRegistrationException;
+import org.web.domain.exceptions.CredentialsInvalidException;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class IncorrectFormatOfRegistrationHandler extends ExceptionHandler {
+public class CredentialsInvalidHandler extends ExceptionHandler {
     @Override
     protected boolean matchThrownException(Throwable throwable) {
-        return throwable instanceof IncorrectFormatOfRegistrationException;
+        return throwable instanceof CredentialsInvalidException;
     }
 
     @Override
