@@ -30,8 +30,6 @@ public class SingletonScope extends ScopeAction {
                 List<Object> constructorArgs = getConstructorArgs(dependency, container);
                 Object[] initArgs = constructorArgs.isEmpty()? null: constructorArgs.toArray(Object[]::new);
                 this.instance = dependency.getDeclaredConstructor(toClassArray(constructorArgs)).newInstance(initArgs);
-            } else {
-                substituteConstructorArgs(dependency, container);
             }
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
@@ -64,9 +62,12 @@ public class SingletonScope extends ScopeAction {
 
     private void setInstanceField(Container container, Parameter parameter){
         Field[] fields = instance.getClass().getFields();
+        System.out.println(instance);
+        System.out.println(parameter.getType());
         try {
             for (Field field: fields){
                 field.setAccessible(true);
+                System.out.println(field.getType());
                 field.set(instance, container.get(parameter.getType()));
             }
         } catch (IllegalAccessException e) {
