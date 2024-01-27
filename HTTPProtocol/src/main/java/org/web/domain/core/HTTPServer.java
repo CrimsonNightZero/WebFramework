@@ -7,7 +7,7 @@ public class HTTPServer {
     private HTTPListener httpPortListener;
     private SocketAddress socketAddress;
     private HTTPHandler httpHandler;
-    protected ExceptionHandler exceptionHandler;
+    protected ExceptionHandler<?> exceptionHandler;
     protected TransformBodyTypeHandler transformBodyTypeHandler;
 
     public HTTPServer() {
@@ -24,7 +24,7 @@ public class HTTPServer {
         this.socketAddress = socketAddress;
     }
 
-    public void registerException(ExceptionHandler exceptionHandler){
+    public void registerException(ExceptionHandler<?> exceptionHandler){
         exceptionHandler.setNext(this.exceptionHandler);
         this.exceptionHandler = exceptionHandler;
     }
