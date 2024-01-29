@@ -2,6 +2,7 @@ package org.web.domain.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class HTTPRequest extends HTTPProtocol{
     private HTTPMethod httpMethod;
@@ -42,6 +43,9 @@ public class HTTPRequest extends HTTPProtocol{
 
     private <T> Map<String, T> parseQueryString(){
         Map<String, T> queryVariable = new HashMap<>();
+        if (Objects.isNull(httpQueryString) || httpQueryString.isBlank()){
+            return queryVariable;
+        }
         String[] queryStrings = httpQueryString.split("&");
         for (String queryString: queryStrings){
             String[] item = queryString.split("=");
