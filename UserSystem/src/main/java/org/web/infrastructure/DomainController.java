@@ -7,6 +7,7 @@ import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
 import org.web.domain.exceptions.ForbiddenException;
 import org.web.domain.exceptions.IllegalAuthenticationException;
+import org.web.domain.exceptions.IncorrectFormatOfEmailException;
 import org.web.domain.exceptions.InvalidNameFormatException;
 import org.web.infrastructure.dto.RegisterUserDTO;
 import org.web.infrastructure.dto.UserLoginDTO;
@@ -43,7 +44,12 @@ public class DomainController {
     public HTTPResponse registerUser(HTTPRequest httpRequest) {
         HTTPRegisterRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPRegisterRequest.class);
 
-        User user = domainService.registerUser(httpPOSTRequest);
+        User user;
+        try {
+            user = domainService.registerUser(httpPOSTRequest);
+        }catch (IncorrectFormatOfEmailException exception){
+            throw new IncorrectFormatOfEmailException("Registration's format incorrect.");
+        }
 
         HTTPResponse httpResponse = new HTTPResponse(201);
         Map<String, String> headers = new HashMap<>();
@@ -57,7 +63,13 @@ public class DomainController {
     public HTTPResponse login(HTTPRequest httpRequest) {
         HTTPLoginRequest httpLoginRequest = httpRequest.readBodyAsObject(HTTPLoginRequest.class);
 
-        User user = domainService.login(httpLoginRequest);
+        User user;
+        try {
+            user = domainService.login(httpLoginRequest);
+        }catch (IncorrectFormatOfEmailException exception){
+            throw new IncorrectFormatOfEmailException("Login's format incorrect.");
+        }
+
         String token = String.valueOf(UUID.randomUUID());
         tokens.put(token, user);
 
@@ -81,7 +93,7 @@ public class DomainController {
 
         try {
             domainService.rename(httpRenameRequest);
-        }catch (IllegalArgumentException exception){
+        }catch (InvalidNameFormatException exception){
             throw new InvalidNameFormatException("Name's format invalid.");
         }
 

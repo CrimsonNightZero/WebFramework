@@ -32,6 +32,7 @@ public class UserSystem {
     }
 
     private User getUser(String email, String password){
+        User.validEmail(email);
         return users.stream().filter(user -> user.getEmail().equals(email) && user.getPassword().equals(password)).findFirst().orElse(null);
     }
 

@@ -2,8 +2,6 @@ package org.web.application;
 
 import org.web.domain.User;
 import org.web.domain.UserSystem;
-import org.web.domain.exceptions.IncorrectFormatOfEmailException;
-
 import java.util.List;
 
 public class DomainService {
@@ -13,19 +11,11 @@ public class DomainService {
     }
 
     public User registerUser(HTTPRegisterRequest httpPOSTRequest){
-        validEmail(httpPOSTRequest.email, "Registration's format incorrect.");
         userSystem.register(httpPOSTRequest.email, httpPOSTRequest.name, httpPOSTRequest.password);
         return userSystem.query(httpPOSTRequest.name).get(0);
     }
 
-    private void validEmail(String email, String exceptionMsg){
-        if (!email.contains("@")){
-            throw new IncorrectFormatOfEmailException(exceptionMsg);
-        }
-    }
-
     public User login(HTTPLoginRequest httpLoginRequest) {
-        validEmail(httpLoginRequest.email, "Login's format incorrect.");
        return userSystem.login(httpLoginRequest.email, httpLoginRequest.password);
     }
 

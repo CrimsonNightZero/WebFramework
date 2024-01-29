@@ -64,7 +64,7 @@ public class WebAPPTestCase {
             User info:
             {
                 "email": "abc@gmail.com",
-                "name": "abc",
+                "name": "abcabc",
                 "password": "hello",
             }
 
@@ -82,13 +82,13 @@ public class WebAPPTestCase {
             {
                 "id": 1,
                 "email": "abc@gmail.com",
-                "name": "abc"
+                "name": "abcabc"
             }
      */
     @Test
     void UserRegistration(){
         // Given
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abc");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -98,7 +98,7 @@ public class WebAPPTestCase {
         Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
         Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
         Assertions.assertEquals("""
-                {"id":1,"email":"abc@gmail.com","name":"abc"}""", response.getResponseBody());
+                {"id":1,"email":"abc@gmail.com","name":"abcabc"}""", response.getResponseBody());
     }
 
     /*
@@ -113,7 +113,7 @@ public class WebAPPTestCase {
             User info:
             {
                 "email": "abc@gmail.com",
-                "name": "abc",
+                "name": "abcabc",
                 "password": "hello",
             }
 
@@ -134,7 +134,7 @@ public class WebAPPTestCase {
     void UserRegistrationOnDuplicateEmailFail(){
         // Given
         webApplication.addException(new DuplicateEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abc");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
 
         // When
         httpClient.send(httpRequest);
@@ -180,8 +180,8 @@ public class WebAPPTestCase {
 
             User info:
             {
-                "email": "abc",
-                "name": "abc",
+                "email": "abcabc",
+                "name": "abcabc",
                 "password": "hello",
             }
 
@@ -202,7 +202,7 @@ public class WebAPPTestCase {
     void UserRegistrationOnIncorrectFormatOfRegistrationFail(){
         // Given
         webApplication.addException(new IncorrectFormatOfEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc", "abc");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abcabc", "abcabc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -242,14 +242,14 @@ public class WebAPPTestCase {
             {
                 "id": 1,
                 "email": "abc@gmail.com",
-                "name": "abc",
+                "name": "abcabc",
                 "token": "67cbbe1b-0c10-46e4-b4a8-9e8505c2453b"
             }
      */
     @Test
     void UserLogin(){
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
 
         HTTPRequest httpRequest = getHttpLoginRequest("abc@gmail.com");
 
@@ -262,7 +262,7 @@ public class WebAPPTestCase {
         Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
         UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(response.getResponseBody(), UserLoginDTO.class);
         Assertions.assertEquals(1, userLoginDTO.id);
-        Assertions.assertEquals("abc", userLoginDTO.name);
+        Assertions.assertEquals("abcabc", userLoginDTO.name);
         Assertions.assertEquals("abc@gmail.com", userLoginDTO.email);
         Assertions.assertNotNull(userLoginDTO.token);
     }
@@ -291,7 +291,7 @@ public class WebAPPTestCase {
 
     /*
         // {email: "def@gmail.com", statusCode: 400, responseBody: Credentials Invalid}
-        // {email: "abc", statusCode: 400, responseBody: Login's format incorrect.}
+        // {email: "abcabc", statusCode: 400, responseBody: Login's format incorrect.}
         Given
             HTTP
                 headers:
@@ -317,10 +317,11 @@ public class WebAPPTestCase {
      */
     @ParameterizedTest
     @MethodSource
-    void userLoginOnFail(String email, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
+    void userLoginOnFail(String email, int statusCode, String responseBody){
         // Given
-        webApplication.addException(exceptionHandler);
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        webApplication.addException(new CredentialsInvalidHandler());
+        webApplication.addException(new IncorrectFormatOfEmailHandler());
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
 
         HTTPRequest httpRequest = getHttpLoginRequest(email);
 
@@ -336,8 +337,8 @@ public class WebAPPTestCase {
 
     private static Stream<Arguments> userLoginOnFail(){
         return Stream.of(
-                Arguments.of("def@gmail.com", 400, "Credentials Invalid", new CredentialsInvalidHandler()),
-                Arguments.of("abd", 400, "Login's format incorrect.", new IncorrectFormatOfEmailHandler())
+                Arguments.of("def@gmail.com", 400, "Credentials Invalid"),
+                Arguments.of("abd", 400, "Login's format incorrect.")
         );
     }
 
@@ -365,7 +366,7 @@ public class WebAPPTestCase {
     @Test
     void UserRename(){
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
         UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
 
@@ -430,7 +431,7 @@ public class WebAPPTestCase {
     void UserRenameOnFail(boolean isLegalToken, int userId, String newName, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
         // Given
         webApplication.addException(exceptionHandler);
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
         UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
         String token = isLegalToken? userLoginDTO.token: "";
@@ -480,12 +481,12 @@ public class WebAPPTestCase {
                 {
                     "id": 0,
                     "email": "abc@gmail.com",
-                    "name": "abc",
+                    "name": "abcabc",
                 },
                 {
                     "id": 1,
                     "email": "def@gmail.com",
-                    "name": "def",
+                    "name": "defdef",
                 }
             ]
      */
@@ -493,8 +494,8 @@ public class WebAPPTestCase {
     @MethodSource()
     void UserQuery(String queryString, String responseBody){
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
-        httpClient.send(getHttpRegisterRequest("def@gmail.com", "def"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
         UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
 
@@ -528,10 +529,10 @@ public class WebAPPTestCase {
 
     private static Stream<Arguments> UserQuery(){
         return Stream.of(
-                Arguments.of("keyword=abc", """
-                        [{"id":1,"email":"abc@gmail.com","name":"abc"}]"""),
+                Arguments.of("keyword=abcabc", """
+                        [{"id":1,"email":"abc@gmail.com","name":"abcabc"}]"""),
                 Arguments.of("", """
-                        [{"id":1,"email":"abc@gmail.com","name":"abc"},{"id":2,"email":"def@gmail.com","name":"def"}]""")
+                        [{"id":1,"email":"abc@gmail.com","name":"abcabc"},{"id":2,"email":"def@gmail.com","name":"defdef"}]""")
         );
     }
 
@@ -560,8 +561,8 @@ public class WebAPPTestCase {
     void UserQueryOnFail(){
         // Given
         webApplication.addException(new IllegalAuthenticationHandler());
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
-        httpClient.send(getHttpRegisterRequest("def@gmail.com", "def"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"));
 
         HTTPRequest httpRequest = getHttpUserQueryRequest("0", "keyword=abc");
 
