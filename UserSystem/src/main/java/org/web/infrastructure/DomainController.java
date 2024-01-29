@@ -10,6 +10,7 @@ import org.web.domain.exceptions.IllegalAuthenticationException;
 import org.web.domain.exceptions.InvalidNameFormatException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DomainController {
     public DomainService domainService;
@@ -112,20 +113,24 @@ public class DomainController {
         return authorization.replace("Bearer ", "").strip();
     }
 
-    public HTTPResponse get(HTTPRequest httpRequest) {
+    public HTTPResponse userQuery(HTTPRequest httpRequest) {
+        String authorization = httpRequest.getHttpHeaders().get("Authorization");
+        validToken(authorization);
+        Map<String, Object> httpQueryVariable = httpRequest.getHttpQueryVariable();
+        List<User> users;
+        if (httpQueryVariable.containsKey("keyword")){
+            users = domainService.userQuery((String) httpQueryVariable.get("keyword"));
+        }
+        else {
+            users = domainService.userQuery();
+        }
+
         HTTPResponse httpResponse = new HTTPResponse(200);
         Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "application/json");
         headers.put("content-encoding", "UTF-8");
         httpResponse.setHttpHeaders(headers);
-
-        List<Map<String, Object>> body = new ArrayList<>();
-        Map<String, Object> item = new HashMap<>();
-        item.put("id", 1);
-        item.put("email", "abc@gmail.com");
-        item.put("name", "abc");
-        body.add(item);
-        httpResponse.setBody(body);
+        httpResponse.setBody(users.stream().map(UserQueryDTO::new).collect(Collectors.toList()));
         return httpResponse;
     }
 }

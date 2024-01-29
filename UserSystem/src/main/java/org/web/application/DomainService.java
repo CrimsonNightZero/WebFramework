@@ -5,6 +5,8 @@ import org.web.domain.UserSystem;
 import org.web.domain.exceptions.IncorrectFormatOfEmailException;
 import org.web.infrastructure.DomainController;
 
+import java.util.List;
+
 public class DomainService {
     private final UserSystem userSystem;
     public DomainService() {
@@ -32,7 +34,11 @@ public class DomainService {
         userSystem.rename(httpRenameRequest.id, httpRenameRequest.newName);
     }
 
-    public void getUser(String name){
-        userSystem.query();
+    public List<User> userQuery(){
+        return userSystem.query();
+    }
+
+    public List<User> userQuery(String name){
+        return userSystem.query(name);
     }
 }

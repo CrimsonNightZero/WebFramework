@@ -41,7 +41,7 @@ public class WebAPPTestCase {
         router.post("/api/users", DomainController.class, "registerUser");
         router.post("/api/users/login", DomainController.class, "login");
         router.patch("/api/users/{userId}", DomainController.class, "rename");
-        router.get("/api/users", DomainController.class, "get");
+        router.get("/api/users", DomainController.class, "userQuery");
 
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
@@ -88,7 +88,7 @@ public class WebAPPTestCase {
     @Test
     void UserRegistration(){
         // Given
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -134,7 +134,7 @@ public class WebAPPTestCase {
     void UserRegistrationOnDuplicateEmailFail(){
         // Given
         webApplication.addException(new DuplicateEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abc");
 
         // When
         httpClient.send(httpRequest);
@@ -147,7 +147,7 @@ public class WebAPPTestCase {
         Assertions.assertEquals("Duplicate email", response.getResponseBody());
     }
 
-    private static HTTPRequest getHttpRegisterRequest(String email) {
+    private static HTTPRequest getHttpRegisterRequest(String email, String name) {
         HTTPRequest httpRequest = new HTTPRequest();
 
         httpRequest.setHttpMethod(HTTPMethod.POST);
@@ -158,7 +158,6 @@ public class WebAPPTestCase {
         headers.put("content-type", "application/json");
         httpRequest.setHttpHeaders(headers);
 
-        String name = "abc";
         String password = "hello";
         String body = String.format("""
                 {
@@ -203,7 +202,7 @@ public class WebAPPTestCase {
     void UserRegistrationOnIncorrectFormatOfRegistrationFail(){
         // Given
         webApplication.addException(new IncorrectFormatOfEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc");
+        HTTPRequest httpRequest = getHttpRegisterRequest("abc", "abc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -250,7 +249,7 @@ public class WebAPPTestCase {
     @Test
     void UserLogin(){
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
 
         HTTPRequest httpRequest = getHttpLoginRequest("abc@gmail.com");
 
@@ -321,7 +320,7 @@ public class WebAPPTestCase {
     void userLoginOnFail(String email, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
         // Given
         webApplication.addException(exceptionHandler);
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
 
         HTTPRequest httpRequest = getHttpLoginRequest(email);
 
@@ -366,7 +365,7 @@ public class WebAPPTestCase {
     @Test
     void UserRename(){
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
         HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
 
@@ -431,7 +430,7 @@ public class WebAPPTestCase {
     void UserRenameOnFail(boolean isLegalToken, int userId, String newName, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
         // Given
         webApplication.addException(exceptionHandler);
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
         HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
         String token = isLegalToken? httpLoginResponse.token: "";
@@ -490,9 +489,50 @@ public class WebAPPTestCase {
                 }
             ]
      */
-    @Test
-    void UserQuery(){
+    @ParameterizedTest
+    @MethodSource()
+    void UserQuery(String queryString, String responseBody){
+        // Given
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "def"));
+        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
+        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
 
+        HTTPRequest httpRequest = getHttpUserQueryRequest(httpLoginResponse.token, queryString);
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(200, response.getHttpStatusCode());
+        Map<String, String> httpHeaders = response.getHttpHeaders();
+        Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
+        Assertions.assertEquals(responseBody, response.getResponseBody());
+    }
+
+    private static HTTPRequest getHttpUserQueryRequest(String token, String queryString) {
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.GET);
+
+        httpRequest.setHttpPath("/api/users");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        headers.put("Authorization", String.format("Bearer %s", token));
+        httpRequest.setHttpHeaders(headers);
+        httpRequest.setHttpQueryString(queryString);
+        return httpRequest;
+    }
+
+    private static Stream<Arguments> UserQuery(){
+        return Stream.of(
+                Arguments.of("keyword=abc", """
+                        [{"id":1,"email":"abc@gmail.com","name":"abc"}]"""),
+                Arguments.of("", """
+                        [{"id":1,"email":"abc@gmail.com","name":"abc"},{"id":2,"email":"def@gmail.com","name":"def"}]""")
+        );
     }
 
     /*
@@ -518,6 +558,21 @@ public class WebAPPTestCase {
      */
     @Test
     void UserQueryOnFail(){
+        // Given
+        webApplication.addException(new IllegalAuthenticationHandler());
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "def"));
 
+        HTTPRequest httpRequest = getHttpUserQueryRequest("0", "keyword=abc");
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(401, response.getHttpStatusCode());
+        Map<String, String> httpHeaders = response.getHttpHeaders();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
+        Assertions.assertEquals("Can't authenticate who you are.", response.getResponseBody());
     }
 }
