@@ -1,7 +1,5 @@
 package org.web.application;
 
-import java.util.UUID;
-
 public class HTTPLoginResponse {
     public int id;
     public String email;
@@ -10,10 +8,10 @@ public class HTTPLoginResponse {
 
     public HTTPLoginResponse() {}
 
-    public HTTPLoginResponse(int id, String email, String name) {
+    public HTTPLoginResponse(int id, String email, String name, String token) {
         this.id = id;
         this.email = email;
         this.name = name;
-        this.token = String.valueOf(UUID.randomUUID());
+        this.token = token;
     }
 }

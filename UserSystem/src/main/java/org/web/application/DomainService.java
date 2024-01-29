@@ -3,6 +3,7 @@ package org.web.application;
 import org.web.domain.User;
 import org.web.domain.UserSystem;
 import org.web.domain.exceptions.IncorrectFormatOfEmailException;
+import org.web.infrastructure.DomainController;
 
 public class DomainService {
     private final UserSystem userSystem;
@@ -22,12 +23,16 @@ public class DomainService {
         }
     }
 
-    public void getUser(String name){
-        userSystem.query();
-    }
-
     public User login(HTTPLoginRequest httpLoginRequest) {
         validEmail(httpLoginRequest.email, "Login's format incorrect.");
        return userSystem.login(httpLoginRequest.email, httpLoginRequest.password);
+    }
+
+    public void rename(DomainController.HTTPRenameRequest httpRenameRequest) {
+        userSystem.rename(httpRenameRequest.id, httpRenameRequest.newName);
+    }
+
+    public void getUser(String name){
+        userSystem.query();
     }
 }

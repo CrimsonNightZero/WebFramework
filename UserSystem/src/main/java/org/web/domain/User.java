@@ -26,6 +26,9 @@ public class User {
     }
 
     public void setName(String name) {
+        if (name.length() < 5 || name.length() > 32){
+            throw new IllegalArgumentException("User name length is limited between 5 to 32");
+        }
         this.name = name;
     }
 

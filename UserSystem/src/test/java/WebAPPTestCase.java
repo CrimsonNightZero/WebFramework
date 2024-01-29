@@ -2,7 +2,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.web.application.HTTPLoginResponse;
-import org.web.domain.exceptions.IncorrectFormatOfEmailException;
 import org.web.infrastructure.DomainController;
 import org.web.application.DomainService;
 import org.junit.jupiter.api.AfterEach;
@@ -15,9 +14,7 @@ import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 import org.web.infrastructure.FileUtil;
-import org.web.infrastructure.exceptions.CredentialsInvalidHandler;
-import org.web.infrastructure.exceptions.DuplicateEmailHandler;
-import org.web.infrastructure.exceptions.IncorrectFormatOfEmailHandler;
+import org.web.infrastructure.exceptions.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +40,7 @@ public class WebAPPTestCase {
         Router router = webApplication.getRouter();
         router.post("/api/users", DomainController.class, "registerUser");
         router.post("/api/users/login", DomainController.class, "login");
-        router.patch("/api/users/1", DomainController.class, "patch");
+        router.patch("/api/users/{userId}", DomainController.class, "rename");
         router.get("/api/users", DomainController.class, "get");
 
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
@@ -150,7 +147,7 @@ public class WebAPPTestCase {
         Assertions.assertEquals("Duplicate email", response.getResponseBody());
     }
 
-    private static HTTPRequest getHttpRegisterRequest(String mail) {
+    private static HTTPRequest getHttpRegisterRequest(String email) {
         HTTPRequest httpRequest = new HTTPRequest();
 
         httpRequest.setHttpMethod(HTTPMethod.POST);
@@ -161,7 +158,6 @@ public class WebAPPTestCase {
         headers.put("content-type", "application/json");
         httpRequest.setHttpHeaders(headers);
 
-        String email = mail;
         String name = "abc";
         String password = "hello";
         String body = String.format("""
@@ -322,7 +318,7 @@ public class WebAPPTestCase {
      */
     @ParameterizedTest
     @MethodSource
-    void userLoginOnFail(String email, int statusCode, String responseBody, ExceptionHandler exceptionHandler){
+    void userLoginOnFail(String email, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
         // Given
         webApplication.addException(exceptionHandler);
         httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
@@ -369,23 +365,55 @@ public class WebAPPTestCase {
      */
     @Test
     void UserRename(){
+        // Given
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
+        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
 
+        HTTPRequest httpRequest = getHttpRenameRequest(httpLoginResponse.token, 1, "newAbc");
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(204, response.getHttpStatusCode());
     }
 
-    /* // {statusCode: 401, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Can't authenticate who you are.}
-       // {statusCode: 403, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Forbidden}
-       // {statusCode: 400, headers: {content-type: plain/text, content-encoding: UTF-8}, responseBody: Name's format invalid.}
+    private static HTTPRequest getHttpRenameRequest(String token, int id, String name) {
+        HTTPRequest httpRequest = new HTTPRequest();
+
+        httpRequest.setHttpMethod(HTTPMethod.PATCH);
+
+        httpRequest.setHttpPath(String.format("/api/users/%d", id));
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "application/json");
+        headers.put("Authorization", String.format("Bearer %s", token));
+        httpRequest.setHttpHeaders(headers);
+
+        String body = String.format("""
+               {
+                   "newName": "%s"
+               }
+                """, name);
+        httpRequest.setBody(body);
+        return httpRequest;
+    }
+
+    /* // {isLegalToken: false, userId: 1, newName: "newAbc", statusCode: 401, responseBody: Can't authenticate who you are.}
+       // {isLegalToken: true, userId: 0, newName: "newAbc", statusCode: 403, responseBody: Forbidden}
+       // {isLegalToken: true, userId: 1, newName: "hi", statusCode: 400, responseBody: Name's format invalid.}
         Given
             HTTP
                 headers:
                     content-type: application/json
-                    Authorization: Bearer <token>
+                    Authorization: Bearer {token}
                 method: PATCH
-                path: /api/users/0
+                path: /api/users/{userId}
 
             User info:
             {
-                "newName": "newAbc"
+                "newName": {newName}
             }
 
         When
@@ -398,9 +426,35 @@ public class WebAPPTestCase {
 
             User info: {responseBody}
      */
-    @Test
-    void UserRenameOnFail(){
+    @ParameterizedTest
+    @MethodSource
+    void UserRenameOnFail(boolean isLegalToken, int userId, String newName, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
+        // Given
+        webApplication.addException(exceptionHandler);
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com"));
+        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
+        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
+        String token = isLegalToken? httpLoginResponse.token: "";
 
+        HTTPRequest httpRequest = getHttpRenameRequest(token, userId, newName);
+
+        // When
+        HTTPResponse response = httpClient.send(httpRequest);
+
+        // Then
+        Assertions.assertEquals(statusCode, response.getHttpStatusCode());
+        Map<String, String> httpHeaders = response.getHttpHeaders();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
+        Assertions.assertEquals(responseBody, response.getResponseBody());
+    }
+
+    private static Stream<Arguments> UserRenameOnFail(){
+        return Stream.of(
+                Arguments.of(false, 1, "newAbc", 401, "Can't authenticate who you are.", new IllegalAuthenticationHandler()),
+                Arguments.of(true, 0, "newAbc", 403, "Forbidden", new ForbiddenHandler()),
+                Arguments.of(true, 1, "hi", 400, "Name's format invalid.", new InvalidNameFormatHandler())
+        );
     }
 
     /*
