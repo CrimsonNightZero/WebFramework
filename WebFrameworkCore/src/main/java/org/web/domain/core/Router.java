@@ -3,17 +3,15 @@ package org.web.domain.core;
 import org.web.infrastructure.exceptions.NotAllowedMethodException;
 import org.web.infrastructure.exceptions.NotFindPathException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Router {
-    private final Map<String, Map<HTTPMethod, Method>> route;
+    private final List<RoutePath> route;
     private Container container;
 
     public Router() {
-        this.route = new HashMap<>();
+        this.route = new ArrayList<>();
     }
 
     public void setWebApplication(WebApplication webApplication) {
@@ -22,18 +20,37 @@ public class Router {
 
     public HTTPResponse execute(HTTPRequest httpRequest) throws Throwable {
         container.refresh(WebApplicationScope.HTTP_REQUEST);
-        if(!route.containsKey(httpRequest.getHttpPath())){
+        if(illegalHTTPPath(httpRequest.getHttpPath())){
             throw new NotFindPathException();
         }
-        else if(!route.get(httpRequest.getHttpPath()).containsKey(httpRequest.getHttpMethod())){
+        else if(illegalHTTPMethod(httpRequest.getHttpPath(), httpRequest.getHttpMethod())){
             throw new NotAllowedMethodException();
         }
 
         return invokeControllerMethod(httpRequest);
     }
 
+    private boolean illegalHTTPPath(HTTPPath path){
+        for (RoutePath routePath : route){
+            if(routePath.getHttpPath().compareHTTPPath(path)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean illegalHTTPMethod(HTTPPath path, HTTPMethod method){
+        for (RoutePath routePath : route){
+            if(routePath.compareRoutePath(path, method)){
+                return false;
+            }
+        }
+        return true;
+    }
+
     private HTTPResponse invokeControllerMethod(HTTPRequest httpRequest) throws Throwable {
-        Method method = route.get(httpRequest.getHttpPath()).get(httpRequest.getHttpMethod());
+        Method method = route.stream().map(routePath -> routePath.getMethod(httpRequest)).filter(Objects::nonNull).findFirst().get();
+
         Object object = container.get(method.getDeclaringClass());
         try{
             return (HTTPResponse) method.invoke(object, httpRequest);
@@ -43,24 +60,7 @@ public class Router {
     }
 
     private void addRoute(HTTPMethod httpMethod, String path, Class<?> controllerClass, String function){
-        Method method = toControllerMethod(controllerClass, function);
-
-        if (route.containsKey(path)){
-            route.get(path).put(httpMethod, method);
-        }
-        else {
-            Map<HTTPMethod, Method> httpMethodMap = new HashMap<>();
-            httpMethodMap.put(httpMethod, method);
-            route.put(path, httpMethodMap);
-        }
-    }
-
-    private Method toControllerMethod(Class<?> controllerClass, String function){
-        try {
-            return controllerClass.getMethod(function, HTTPRequest.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        route.add(new RoutePath(path, httpMethod, controllerClass, function));
     }
 
     public void post(String path, Class<?> controllerClass, String function) {
