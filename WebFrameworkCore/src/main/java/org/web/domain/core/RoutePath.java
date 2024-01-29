@@ -18,7 +18,7 @@ public class RoutePath {
     }
 
     public boolean compareRoutePath(HTTPPath httpPath, HTTPMethod httpMethod){
-        return httpPath.compareHTTPPath(httpPath) && this.httpMethod.equals(httpMethod);
+        return this.httpPath.compareHTTPPath(httpPath) && this.httpMethod.equals(httpMethod);
     }
 
     public Method getMethod(HTTPRequest httpRequest){
