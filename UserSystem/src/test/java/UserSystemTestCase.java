@@ -27,7 +27,7 @@ public class UserSystemTestCase {
     void register(){
         // Given
         String email = "abc@gmail.com";
-        String name = "abc";
+        String name = "abcabc";
         String password = "hello";
         UserSystem userSystem = new UserSystem();
 
@@ -63,7 +63,7 @@ public class UserSystemTestCase {
     void login(){
         // Given
         String email = "abc@gmail.com";
-        String name = "abc";
+        String name = "abcabc";
         String password = "hello";
         UserSystem userSystem = new UserSystem();
         userSystem.register(email, name, password);
@@ -98,7 +98,7 @@ public class UserSystemTestCase {
     void rename(){
         // Given
         String email = "abc@gmail.com";
-        String name = "abc";
+        String name = "abcabc";
         String password = "hello";
         UserSystem userSystem = new UserSystem();
         userSystem.register(email, name, password);
@@ -106,7 +106,6 @@ public class UserSystemTestCase {
         String newName = "newAbc";
 
         // When
-
         userSystem.rename(user.getId(), newName);
 
         // Then
@@ -137,7 +136,7 @@ public class UserSystemTestCase {
     void query(){
         // Given
         String email = "abc@gmail.com";
-        String name = "abc";
+        String name = "abcabc";
         String password = "hello";
         UserSystem userSystem = new UserSystem();
         userSystem.register(email, name, password);
