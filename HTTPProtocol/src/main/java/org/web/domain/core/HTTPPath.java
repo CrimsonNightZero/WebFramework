@@ -51,7 +51,6 @@ public class HTTPPath {
         for (String httpPathResource : httpPathResources) {
             if (isPathVariable(httpPathResource)){
                 setPathVariable(httpPathResource, pathSource[httpPathResources.indexOf(httpPathResource)]);
-                System.out.println(httpPathResource);
                 continue;
             }
             if (!httpPathResource.equals(pathSource[httpPathResources.indexOf(httpPathResource)])){
