@@ -34,7 +34,7 @@ public class WebFrameworkTestCase {
 
         Router router = webApplication.getRouter();
         router.post("/api/users", DomainController.class, "post");
-        router.patch("/api/users/1", DomainController.class, "patch");
+        router.patch("/api/users/{userId}", DomainController.class, "patch");
         router.get("/api/users", DomainController.class, "get");
 
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());

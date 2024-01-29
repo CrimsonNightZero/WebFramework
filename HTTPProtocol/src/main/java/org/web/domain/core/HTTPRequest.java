@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class HTTPRequest extends HTTPProtocol{
     private HTTPMethod httpMethod;
-    private String httpPath;
+    private HTTPPath httpPath;
     private String httpQueryString;
 
     public HTTPMethod getHttpMethod() {
@@ -16,11 +16,15 @@ public class HTTPRequest extends HTTPProtocol{
         this.httpMethod = httpMethod;
     }
 
-    public String getHttpPath() {
+    public HTTPPath getHttpPath() {
         return httpPath;
     }
 
-    public void setHttpPath(String httpPath) {
+    public void setHttpPath(String path) {
+        this.httpPath = new HTTPPath(path);
+    }
+
+    public void setHttpPath(HTTPPath httpPath) {
         this.httpPath = httpPath;
     }
 

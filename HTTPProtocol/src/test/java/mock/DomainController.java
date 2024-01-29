@@ -15,7 +15,7 @@ import java.util.Map;
 public class DomainController implements HTTPHandler {
     @Override
     public HTTPResponse handle(HTTPRequest httpRequest) {
-        if (httpRequest.getHttpPath().equals("/api/users")){
+        if (httpRequest.getHttpPath().comparePath("/api/users")){
             if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)){
                 return post(httpRequest);
             }
@@ -24,7 +24,7 @@ public class DomainController implements HTTPHandler {
             }
             throw new NotAllowedMethodException();
         }
-        else if (httpRequest.getHttpPath().equals("/api/users/1")){
+        else if (httpRequest.getHttpPath().comparePath("/api/users/1")){
             if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)){
                 return patch(httpRequest);
             }
