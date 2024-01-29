@@ -1,7 +1,7 @@
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.web.application.HTTPLoginResponse;
+import org.web.infrastructure.dto.UserLoginDTO;
 import org.web.infrastructure.DomainController;
 import org.web.application.DomainService;
 import org.junit.jupiter.api.AfterEach;
@@ -260,11 +260,11 @@ public class WebAPPTestCase {
         Assertions.assertEquals(200, response.getHttpStatusCode());
         Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
         Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
-        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(response.getResponseBody(), HTTPLoginResponse.class);
-        Assertions.assertEquals(1, httpLoginResponse.id);
-        Assertions.assertEquals("abc", httpLoginResponse.name);
-        Assertions.assertEquals("abc@gmail.com", httpLoginResponse.email);
-        Assertions.assertNotNull(httpLoginResponse.token);
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(response.getResponseBody(), UserLoginDTO.class);
+        Assertions.assertEquals(1, userLoginDTO.id);
+        Assertions.assertEquals("abc", userLoginDTO.name);
+        Assertions.assertEquals("abc@gmail.com", userLoginDTO.email);
+        Assertions.assertNotNull(userLoginDTO.token);
     }
 
     private static HTTPRequest getHttpLoginRequest(String email) {
@@ -367,9 +367,9 @@ public class WebAPPTestCase {
         // Given
         httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
 
-        HTTPRequest httpRequest = getHttpRenameRequest(httpLoginResponse.token, 1, "newAbc");
+        HTTPRequest httpRequest = getHttpRenameRequest(userLoginDTO.token, 1, "newAbc");
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);
@@ -432,8 +432,8 @@ public class WebAPPTestCase {
         webApplication.addException(exceptionHandler);
         httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
-        String token = isLegalToken? httpLoginResponse.token: "";
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
+        String token = isLegalToken? userLoginDTO.token: "";
 
         HTTPRequest httpRequest = getHttpRenameRequest(token, userId, newName);
 
@@ -496,9 +496,9 @@ public class WebAPPTestCase {
         httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abc"));
         httpClient.send(getHttpRegisterRequest("def@gmail.com", "def"));
         HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        HTTPLoginResponse httpLoginResponse = (HTTPLoginResponse) FileUtil.readJsonValue(loginResponse.getResponseBody(), HTTPLoginResponse.class);
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
 
-        HTTPRequest httpRequest = getHttpUserQueryRequest(httpLoginResponse.token, queryString);
+        HTTPRequest httpRequest = getHttpUserQueryRequest(userLoginDTO.token, queryString);
 
         // When
         HTTPResponse response = httpClient.send(httpRequest);

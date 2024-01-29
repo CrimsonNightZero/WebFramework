@@ -1,14 +1,15 @@
-package org.web.application;
+package org.web.infrastructure.dto;
 
-public class HTTPLoginResponse {
+public class UserLoginDTO {
     public int id;
     public String email;
     public String name;
     public String token;
 
-    public HTTPLoginResponse() {}
+    public UserLoginDTO() {
+    }
 
-    public HTTPLoginResponse(int id, String email, String name, String token) {
+    public UserLoginDTO(int id, String email, String name, String token) {
         this.id = id;
         this.email = email;
         this.name = name;

@@ -1,6 +1,6 @@
 package org.web.application;
 
-public class HTTPPOSTRequest {
+public class HTTPRegisterRequest {
     public String email;
     public String name;
     public String password;

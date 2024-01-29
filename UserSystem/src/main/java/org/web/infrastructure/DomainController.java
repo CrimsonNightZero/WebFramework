@@ -8,6 +8,9 @@ import org.web.domain.core.HTTPResponse;
 import org.web.domain.exceptions.ForbiddenException;
 import org.web.domain.exceptions.IllegalAuthenticationException;
 import org.web.domain.exceptions.InvalidNameFormatException;
+import org.web.infrastructure.dto.RegisterUserDTO;
+import org.web.infrastructure.dto.UserLoginDTO;
+import org.web.infrastructure.dto.UserQueryDTO;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,7 +41,7 @@ public class DomainController {
     }
 
     public HTTPResponse registerUser(HTTPRequest httpRequest) {
-        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+        HTTPRegisterRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPRegisterRequest.class);
 
         User user = domainService.registerUser(httpPOSTRequest);
 
@@ -47,7 +50,7 @@ public class DomainController {
         headers.put("content-type", "application/json");
         headers.put("content-encoding", "UTF-8");
         httpResponse.setHttpHeaders(headers);
-        httpResponse.setBody(new HTTPPOSTResponse(user.getId(), user.getEmail(), user.getName()));
+        httpResponse.setBody(new RegisterUserDTO(user.getId(), user.getEmail(), user.getName()));
         return httpResponse;
     }
 
@@ -63,15 +66,9 @@ public class DomainController {
         headers.put("content-type", "application/json");
         headers.put("content-encoding", "UTF-8");
         httpResponse.setHttpHeaders(headers);
-        httpResponse.setBody(new HTTPLoginResponse(user.getId(), user.getEmail(), user.getName(), token));
+        httpResponse.setBody(new UserLoginDTO(user.getId(), user.getEmail(), user.getName(), token));
         return httpResponse;
     }
-
-    public static class HTTPRenameRequest{
-        public int id;
-        public String newName;
-    }
-
 
     public HTTPResponse rename(HTTPRequest httpRequest) {
         String authorization = httpRequest.getHttpHeaders().get("Authorization");

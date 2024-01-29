@@ -3,7 +3,6 @@ package org.web.application;
 import org.web.domain.User;
 import org.web.domain.UserSystem;
 import org.web.domain.exceptions.IncorrectFormatOfEmailException;
-import org.web.infrastructure.DomainController;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ public class DomainService {
         this.userSystem = new UserSystem();
     }
 
-    public User registerUser(HTTPPOSTRequest httpPOSTRequest){
+    public User registerUser(HTTPRegisterRequest httpPOSTRequest){
         validEmail(httpPOSTRequest.email, "Registration's format incorrect.");
         userSystem.register(httpPOSTRequest.email, httpPOSTRequest.name, httpPOSTRequest.password);
         return userSystem.query(httpPOSTRequest.name).get(0);
@@ -30,7 +29,7 @@ public class DomainService {
        return userSystem.login(httpLoginRequest.email, httpLoginRequest.password);
     }
 
-    public void rename(DomainController.HTTPRenameRequest httpRenameRequest) {
+    public void rename(HTTPRenameRequest httpRenameRequest) {
         userSystem.rename(httpRenameRequest.id, httpRenameRequest.newName);
     }
 
