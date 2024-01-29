@@ -7,11 +7,11 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class Router {
-    private final List<RoutePath> route;
+    private final List<MethodController> methodControllers;
     private Container container;
 
     public Router() {
-        this.route = new ArrayList<>();
+        this.methodControllers = new ArrayList<>();
     }
 
     public void setWebApplication(WebApplication webApplication) {
@@ -31,8 +31,8 @@ public class Router {
     }
 
     private boolean illegalHTTPPath(HTTPPath path){
-        for (RoutePath routePath : route){
-            if(routePath.getHttpPath().compareHTTPPath(path)){
+        for (MethodController methodController : methodControllers){
+            if(methodController.getHttpPath().compareHTTPPath(path)){
                 return false;
             }
         }
@@ -40,8 +40,8 @@ public class Router {
     }
 
     private boolean illegalHTTPMethod(HTTPPath path, HTTPMethod method){
-        for (RoutePath routePath : route){
-            if(routePath.compareRoutePath(path, method)){
+        for (MethodController methodController : methodControllers){
+            if(methodController.compareMethodController(path, method)){
                 return false;
             }
         }
@@ -49,8 +49,7 @@ public class Router {
     }
 
     private HTTPResponse invokeControllerMethod(HTTPRequest httpRequest) throws Throwable {
-        Method method = route.stream().map(routePath -> routePath.getMethod(httpRequest)).filter(Objects::nonNull).findFirst().get();
-
+        Method method = methodControllers.stream().map(methodController -> methodController.getMethod(httpRequest)).filter(Objects::nonNull).findFirst().get();
         Object object = container.get(method.getDeclaringClass());
         try{
             return (HTTPResponse) method.invoke(object, httpRequest);
@@ -60,7 +59,7 @@ public class Router {
     }
 
     private void addRoute(HTTPMethod httpMethod, String path, Class<?> controllerClass, String function){
-        route.add(new RoutePath(path, httpMethod, controllerClass, function));
+        methodControllers.add(new MethodController(path, httpMethod, controllerClass, function));
     }
 
     public void post(String path, Class<?> controllerClass, String function) {
