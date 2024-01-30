@@ -1,12 +1,12 @@
 package mock;
 
-import org.web.domain.core.HTTPRequest;
-import org.web.domain.core.HTTPResponse;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.web.domain.core.HTTPRequest;
+import org.web.domain.core.HTTPResponse;
 
 public class DomainController {
     public DomainService domainService;
@@ -28,7 +28,7 @@ public class DomainController {
             HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
             domainService.validEmail(httpPOSTRequest);
             return new HTTPResponse(201);
-        }catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             HTTPResponse httpResponse = new HTTPResponse(400);
             Map<String, String> headers = new HashMap<>();
             headers.put("content-type", "plain/text");

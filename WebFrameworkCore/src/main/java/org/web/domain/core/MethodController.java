@@ -17,20 +17,20 @@ public class MethodController {
         return httpPath;
     }
 
-    public boolean compareMethodController(HTTPPath httpPath, HTTPMethod httpMethod){
+    public boolean compareMethodController(HTTPPath httpPath, HTTPMethod httpMethod) {
         return this.httpPath.compareHTTPPath(httpPath) && this.httpMethod.equals(httpMethod);
     }
 
-    public Method getMethod(HTTPRequest httpRequest){
-        if (compareMethodController(httpRequest.getHttpPath(), httpRequest.getHttpMethod())){
+    public Method getMethod(HTTPRequest httpRequest) {
+        if (compareMethodController(httpRequest.getHttpPath(), httpRequest.getHttpMethod())) {
             httpRequest.setHttpPath(httpPath);
             return method;
-        }else{
+        } else {
             return null;
         }
     }
 
-    public Method toMethod(Class<?> controllerClass, String functionName){
+    public Method toMethod(Class<?> controllerClass, String functionName) {
         try {
             return controllerClass.getMethod(functionName, HTTPRequest.class);
         } catch (NoSuchMethodException e) {

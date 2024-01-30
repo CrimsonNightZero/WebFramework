@@ -1,6 +1,6 @@
 package org.web.domain.exceptions;
 
-public class DuplicateEmailException extends RuntimeException{
+public class DuplicateEmailException extends RuntimeException {
     public DuplicateEmailException() {
     }
 
@@ -16,7 +16,8 @@ public class DuplicateEmailException extends RuntimeException{
         super(cause);
     }
 
-    public DuplicateEmailException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public DuplicateEmailException(String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

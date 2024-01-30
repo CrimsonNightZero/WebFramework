@@ -27,14 +27,13 @@ public class WebApplication extends HTTPServer {
         return container;
     }
 
-    public HTTPResponse response(HTTPRequest httpRequest){
+    public HTTPResponse response(HTTPRequest httpRequest) {
         try {
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
             HTTPResponse response = router.execute(httpRequest);
             response.setTransformBodyTypeHandler(transformBodyTypeHandler);
             return response;
-        }
-        catch (Throwable ex){
+        } catch (Throwable ex) {
             System.out.println(ex);
             ex.printStackTrace();
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
@@ -44,7 +43,7 @@ public class WebApplication extends HTTPServer {
         }
     }
 
-    public void addException(ExceptionHandler exceptionHandler){
+    public void addException(ExceptionHandler exceptionHandler) {
         registerException(exceptionHandler);
     }
 

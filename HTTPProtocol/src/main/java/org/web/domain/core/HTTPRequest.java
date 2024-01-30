@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class HTTPRequest extends HTTPProtocol{
+public class HTTPRequest extends HTTPProtocol {
     private HTTPMethod httpMethod;
     private HTTPPath httpPath;
     private String httpQueryString;
@@ -41,20 +41,20 @@ public class HTTPRequest extends HTTPProtocol{
         return parseQueryString();
     }
 
-    private <T> Map<String, T> parseQueryString(){
+    private <T> Map<String, T> parseQueryString() {
         Map<String, T> queryVariable = new HashMap<>();
-        if (Objects.isNull(httpQueryString) || httpQueryString.isBlank()){
+        if (Objects.isNull(httpQueryString) || httpQueryString.isBlank()) {
             return queryVariable;
         }
         String[] queryStrings = httpQueryString.split("&");
-        for (String queryString: queryStrings){
+        for (String queryString : queryStrings) {
             String[] item = queryString.split("=");
             queryVariable.put(item[0], (T) item[1]);
         }
         return queryVariable;
     }
 
-    public <T> T readBodyAsObject(Class<?> httpRequestClass){
+    public <T> T readBodyAsObject(Class<?> httpRequestClass) {
         return serialization(httpRequestClass);
     }
 }

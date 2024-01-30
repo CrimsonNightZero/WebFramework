@@ -42,14 +42,14 @@ public class User {
         return password;
     }
 
-    private static void validName(String name){
-        if (name.length() < 5 || name.length() > 32){
+    private static void validName(String name) {
+        if (name.length() < 5 || name.length() > 32) {
             throw new InvalidNameFormatException("User name length is limited between 5 to 32");
         }
     }
 
-    public static void validEmail(String email){
-        if (!email.contains("@")){
+    public static void validEmail(String email) {
+        if (!email.contains("@")) {
             throw new IncorrectFormatOfEmailException("Illegal email.");
         }
     }

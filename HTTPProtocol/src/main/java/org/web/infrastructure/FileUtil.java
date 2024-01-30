@@ -1,14 +1,15 @@
 package org.web.infrastructure;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 public class FileUtil {
     private static ObjectMapper objectMapper = null;
@@ -34,10 +35,10 @@ public class FileUtil {
     }
 
     public static Object readXMLValue(Object value, Class<?> httpRequestClass) {
-        try{
+        try {
             JAXBContext jaxbContext = JAXBContext.newInstance(httpRequestClass);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            return unmarshaller.unmarshal(new StringReader((String)value));
+            return unmarshaller.unmarshal(new StringReader((String) value));
         } catch (JAXBException e) {
             System.out.println(e);
             throw new RuntimeException("Read xml fail");
@@ -55,7 +56,7 @@ public class FileUtil {
     }
 
     public static String writeXMLValue(Object value, Class<?> httpRequestClass) {
-        try{
+        try {
             JAXBContext jaxbContext = JAXBContext.newInstance(httpRequestClass);
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);

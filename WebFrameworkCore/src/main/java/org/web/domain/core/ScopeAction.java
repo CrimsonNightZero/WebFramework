@@ -13,13 +13,14 @@ public abstract class ScopeAction {
         return instance;
     }
 
-    public void execute(WebApplicationScope scope, Class<?> httpController, Container container){
-        if (matchScope(scope)){
+    public void execute(WebApplicationScope scope, Class<?> httpController, Container container) {
+        if (matchScope(scope)) {
             register(httpController, container);
         }
     }
 
     protected abstract boolean matchScope(WebApplicationScope scope);
+
     protected abstract void register(Class<?> httpController, Container container);
 
     protected Object getNewInstance(Class<?> httpController, Container container){

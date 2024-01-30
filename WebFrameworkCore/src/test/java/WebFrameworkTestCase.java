@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
-import org.web.domain.ext.HTTPRequestScope;
 import org.web.domain.ext.PrototypeScope;
 import org.web.domain.ext.SingletonScope;
 import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;

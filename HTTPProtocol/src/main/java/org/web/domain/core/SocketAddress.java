@@ -16,15 +16,15 @@ public class SocketAddress {
         return port;
     }
 
-    public HTTPResponse request(HTTPRequest httpRequest){
+    public HTTPResponse request(HTTPRequest httpRequest) {
         return protocolListeners.stream().map(listener -> listener.send(port, httpRequest)).findFirst().orElseThrow();
     }
 
-    public void subscribe(ProtocolListener protocolListener){
+    public void subscribe(ProtocolListener protocolListener) {
         protocolListeners.add(protocolListener);
     }
 
-    public void unsubscribe(ProtocolListener protocolListener){
+    public void unsubscribe(ProtocolListener protocolListener) {
         protocolListeners.remove(protocolListener);
     }
 }

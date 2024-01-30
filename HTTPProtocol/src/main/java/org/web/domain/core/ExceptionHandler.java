@@ -18,15 +18,15 @@ public abstract class ExceptionHandler<T extends Exception> {
         this.next = next;
     }
 
-    public HTTPResponse handle(HTTPRequest httpRequest, Throwable throwable){
-        return matchThrownException(throwable)? response(httpRequest, throwable): next.handle(httpRequest, throwable);
+    public HTTPResponse handle(HTTPRequest httpRequest, Throwable throwable) {
+        return matchThrownException(throwable) ? response(httpRequest, throwable) : next.handle(httpRequest, throwable);
     }
 
-    private boolean matchThrownException(Throwable throwable){
+    private boolean matchThrownException(Throwable throwable) {
         return throwable.getClass().equals(exception);
     }
 
-    private HTTPResponse response(HTTPRequest httpRequest, Throwable throwable){
+    private HTTPResponse response(HTTPRequest httpRequest, Throwable throwable) {
         HTTPResponse httpResponse = new HTTPResponse(statusCode);
         Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "plain/text");
@@ -36,7 +36,7 @@ public abstract class ExceptionHandler<T extends Exception> {
         return httpResponse;
     }
 
-    protected String getExceptionMessage(HTTPRequest httpRequest, Throwable throwable){
+    protected String getExceptionMessage(HTTPRequest httpRequest, Throwable throwable) {
         return throwable.getMessage();
     }
 }

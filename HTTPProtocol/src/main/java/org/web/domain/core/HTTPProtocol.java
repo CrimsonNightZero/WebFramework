@@ -1,7 +1,5 @@
 package org.web.domain.core;
 
-import org.web.domain.ext.protocol.*;
-
 import java.util.Map;
 
 public abstract class HTTPProtocol {
@@ -30,11 +28,11 @@ public abstract class HTTPProtocol {
         this.body = body;
     }
 
-    public void setTransformBodyTypeHandler(TransformBodyTypeHandler transformBodyTypeHandler){
+    public void setTransformBodyTypeHandler(TransformBodyTypeHandler transformBodyTypeHandler) {
         this.transformBodyTypeHandler = transformBodyTypeHandler;
     }
 
-    public <T> T serialization(Class<?> transformClass){
+    public <T> T serialization(Class<?> transformClass) {
         return transformBodyTypeHandler.serialize(httpHeaders.get("content-type"), body, transformClass);
     }
 

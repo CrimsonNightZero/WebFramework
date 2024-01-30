@@ -15,6 +15,6 @@ public class HTTPListener extends ProtocolListener {
 
     @Override
     protected HTTPResponse handle(HTTPRequest httpRequest) {
-       return httpServer.response(httpRequest);
+        return httpServer.response(httpRequest);
     }
 }

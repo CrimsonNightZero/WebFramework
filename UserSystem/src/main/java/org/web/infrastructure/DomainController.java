@@ -1,7 +1,15 @@
 package org.web.infrastructure;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.web.application.*;
+import org.web.application.DomainService;
+import org.web.application.HTTPLoginRequest;
+import org.web.application.HTTPRegisterRequest;
+import org.web.application.HTTPRenameRequest;
 import org.web.domain.User;
 import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
@@ -12,9 +20,6 @@ import org.web.domain.exceptions.InvalidNameFormatException;
 import org.web.infrastructure.dto.RegisterUserDTO;
 import org.web.infrastructure.dto.UserLoginDTO;
 import org.web.infrastructure.dto.UserQueryDTO;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class DomainController {
     public DomainService domainService;
@@ -47,7 +52,7 @@ public class DomainController {
         User user;
         try {
             user = domainService.registerUser(httpPOSTRequest);
-        }catch (IncorrectFormatOfEmailException exception){
+        } catch (IncorrectFormatOfEmailException exception) {
             throw new IncorrectFormatOfEmailException("Registration's format incorrect.");
         }
 
@@ -66,7 +71,7 @@ public class DomainController {
         User user;
         try {
             user = domainService.login(httpLoginRequest);
-        }catch (IncorrectFormatOfEmailException exception){
+        } catch (IncorrectFormatOfEmailException exception) {
             throw new IncorrectFormatOfEmailException("Login's format incorrect.");
         }
 
@@ -93,32 +98,32 @@ public class DomainController {
 
         try {
             domainService.rename(httpRenameRequest);
-        }catch (InvalidNameFormatException exception){
+        } catch (InvalidNameFormatException exception) {
             throw new InvalidNameFormatException("Name's format invalid.");
         }
 
         return new HTTPResponse(204);
     }
 
-    private void validToken(String authorization){
+    private void validToken(String authorization) {
         String token = parseToken(authorization);
-        if (!tokens.containsKey(token)){
+        if (!tokens.containsKey(token)) {
             throw new IllegalAuthenticationException("Can't authenticate who you are.");
         }
     }
 
     private void validPermission(String authorization, int userId) {
         User user = getUserByAuthorization(authorization);
-        if (user.getId() != userId){
+        if (user.getId() != userId) {
             throw new ForbiddenException("Forbidden");
         }
     }
 
-    private User getUserByAuthorization(String authorization){
+    private User getUserByAuthorization(String authorization) {
         return tokens.get(parseToken(authorization));
     }
 
-    private String parseToken(String authorization){
+    private String parseToken(String authorization) {
         return authorization.replace("Bearer ", "").strip();
     }
 
@@ -127,10 +132,9 @@ public class DomainController {
         validToken(authorization);
         Map<String, Object> httpQueryVariable = httpRequest.getHttpQueryVariable();
         List<User> users;
-        if (httpQueryVariable.containsKey("keyword")){
+        if (httpQueryVariable.containsKey("keyword")) {
             users = domainService.userQuery((String) httpQueryVariable.get("keyword"));
-        }
-        else {
+        } else {
             users = domainService.userQuery();
         }
 

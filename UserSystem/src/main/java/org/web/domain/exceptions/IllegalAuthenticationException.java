@@ -1,6 +1,6 @@
 package org.web.domain.exceptions;
 
-public class IllegalAuthenticationException extends RuntimeException{
+public class IllegalAuthenticationException extends RuntimeException {
     public IllegalAuthenticationException() {
         super();
     }
@@ -17,7 +17,8 @@ public class IllegalAuthenticationException extends RuntimeException{
         super(cause);
     }
 
-    protected IllegalAuthenticationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    protected IllegalAuthenticationException(String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

@@ -1,6 +1,8 @@
 package org.web;
 
-import org.web.domain.core.*;
+import org.web.domain.core.HTTPClient;
+import org.web.domain.core.SocketAddress;
+import org.web.domain.core.WebApplication;
 
 public class Main {
     public static void main(String[] args) {
