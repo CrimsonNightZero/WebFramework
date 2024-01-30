@@ -1,10 +1,5 @@
 package mock;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.web.domain.core.HTTPHandler;
 import org.web.domain.core.HTTPMethod;
 import org.web.domain.core.HTTPRequest;
@@ -12,31 +7,37 @@ import org.web.domain.core.HTTPResponse;
 import org.web.infrastructure.exceptions.NotAllowedMethodException;
 import org.web.infrastructure.exceptions.NotFindPathException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class DomainController implements HTTPHandler {
     @Override
     public HTTPResponse handle(HTTPRequest httpRequest) {
-        if (httpRequest.getHttpPath().comparePath("/api/users")) {
-            if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)) {
+        if (httpRequest.getHttpPath().comparePath("/api/users")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.POST)){
                 return post(httpRequest);
-            } else if (httpRequest.getHttpMethod().equals(HTTPMethod.GET)) {
+            }
+            else if (httpRequest.getHttpMethod().equals(HTTPMethod.GET)){
                 return get(httpRequest);
             }
             throw new NotAllowedMethodException();
-        } else if (httpRequest.getHttpPath().comparePath("/api/users/1")) {
-            if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)) {
+        }
+        else if (httpRequest.getHttpPath().comparePath("/api/users/1")){
+            if (httpRequest.getHttpMethod().equals(HTTPMethod.PATCH)){
                 return patch(httpRequest);
             }
             throw new NotAllowedMethodException();
         }
         throw new NotFindPathException();
     }
-
     public HTTPResponse post(HTTPRequest httpRequest) {
         HTTPPOSTRequest httpPostRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
         try {
             validEmail(httpPostRequest.email);
             return new HTTPResponse(201);
-        } catch (IllegalArgumentException ex) {
+        }catch (IllegalArgumentException ex){
             HTTPResponse httpResponse = new HTTPResponse(400);
             Map<String, String> headers = new HashMap<>();
             headers.put("content-type", "plain/text");
@@ -80,8 +81,8 @@ public class DomainController implements HTTPHandler {
         return httpResponse;
     }
 
-    private void validEmail(String email) {
-        if (!email.contains("@")) {
+    private void validEmail(String email){
+        if (!email.contains("@")){
             throw new IllegalArgumentException("Illegal Email");
         }
     }

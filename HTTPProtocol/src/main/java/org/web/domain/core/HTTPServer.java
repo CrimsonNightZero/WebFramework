@@ -14,17 +14,17 @@ public class HTTPServer {
         this.exceptionHandler = new NotExpectedExecutionHandler();
     }
 
-    public void createContext(HTTPHandler httpHandler) {
+    public void createContext(HTTPHandler httpHandler){
         this.httpHandler = httpHandler;
     }
 
-    public void listen(SocketAddress socketAddress) {
-        this.httpPortListener = new HTTPListener(socketAddress.getPort(), this);
+    public void listen(SocketAddress socketAddress){
+        this.httpPortListener = new HTTPListener(socketAddress.getPort(),this);
         socketAddress.subscribe(httpPortListener);
         this.socketAddress = socketAddress;
     }
 
-    public void registerException(ExceptionHandler<?> exceptionHandler) {
+    public void registerException(ExceptionHandler<?> exceptionHandler){
         exceptionHandler.setNext(this.exceptionHandler);
         this.exceptionHandler = exceptionHandler;
     }
@@ -34,13 +34,14 @@ public class HTTPServer {
         this.transformBodyTypeHandler = transformBodyTypeHandler;
     }
 
-    public HTTPResponse response(HTTPRequest httpRequest) {
+    public HTTPResponse response(HTTPRequest httpRequest){
         try {
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
             HTTPResponse response = httpHandler.handle(httpRequest);
             response.setTransformBodyTypeHandler(transformBodyTypeHandler);
             return response;
-        } catch (Throwable ex) {
+        }
+        catch (Throwable ex){
             System.out.println(ex);
             httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
             HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
@@ -49,7 +50,7 @@ public class HTTPServer {
         }
     }
 
-    public void close() {
+    public void close(){
         socketAddress.unsubscribe(httpPortListener);
         this.httpPortListener = null;
     }

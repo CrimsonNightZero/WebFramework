@@ -1,6 +1,6 @@
 package org.web.domain.exceptions;
 
-public class CredentialsInvalidException extends RuntimeException {
+public class CredentialsInvalidException extends RuntimeException{
     public CredentialsInvalidException() {
     }
 
@@ -16,8 +16,7 @@ public class CredentialsInvalidException extends RuntimeException {
         super(cause);
     }
 
-    public CredentialsInvalidException(String message, Throwable cause, boolean enableSuppression,
-            boolean writableStackTrace) {
+    public CredentialsInvalidException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

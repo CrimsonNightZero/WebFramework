@@ -1,6 +1,6 @@
 package org.web.domain.exceptions;
 
-public class InvalidNameFormatException extends RuntimeException {
+public class InvalidNameFormatException extends RuntimeException{
     public InvalidNameFormatException() {
     }
 
@@ -16,8 +16,7 @@ public class InvalidNameFormatException extends RuntimeException {
         super(cause);
     }
 
-    public InvalidNameFormatException(String message, Throwable cause, boolean enableSuppression,
-            boolean writableStackTrace) {
+    public InvalidNameFormatException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }
