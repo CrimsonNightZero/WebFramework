@@ -7,7 +7,6 @@ import java.util.Map;
 
 public class HTTPPath {
     private final String path;
-
     private final Map<String, Object> pathVariable;
 
     public HTTPPath(String path) {
