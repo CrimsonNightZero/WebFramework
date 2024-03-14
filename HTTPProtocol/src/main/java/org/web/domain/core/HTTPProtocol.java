@@ -1,15 +1,16 @@
 package org.web.domain.core;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class HTTPProtocol {
     protected Map<String, String> httpHeaders;
 
     protected Object body;
-    private TransformBodyTypeHandler transformBodyTypeHandler;
 
     public HTTPProtocol() {
-        this.transformBodyTypeHandler = null;
     }
 
     public Map<String, String> getHttpHeaders() {
@@ -20,23 +21,33 @@ public abstract class HTTPProtocol {
         this.httpHeaders = httpHeaders;
     }
 
+    public void setHttpHeaders(String httpHeaders) {
+        this.httpHeaders = parserHttpHeaders(httpHeaders);
+    }
+
+    private Map<String, String> parserHttpHeaders(String httpHeaders) {
+        HashMap<String, String> httpHeadersMap = new HashMap<>();
+        for (String httpHeader : httpHeaders.split("\r\n")) {
+            String[] header = httpHeader.split(": ");
+            httpHeadersMap.put(header[0].toLowerCase(), header[1]);
+        }
+        return httpHeadersMap;
+    }
+
+    public String getHttpHeaderString() {
+        if (Objects.isNull(httpHeaders)) {
+            return "";
+        }
+        return httpHeaders.entrySet().stream()
+                .map(httpHeader -> String.format("%s: %s\n", httpHeader.getKey().toLowerCase(), httpHeader.getValue()))
+                .collect(Collectors.joining()).strip();
+    }
+
     public Object getBody() {
         return body;
     }
 
     public void setBody(Object body) {
         this.body = body;
-    }
-
-    public void setTransformBodyTypeHandler(TransformBodyTypeHandler transformBodyTypeHandler) {
-        this.transformBodyTypeHandler = transformBodyTypeHandler;
-    }
-
-    public <T> T serialization(Class<?> transformClass) {
-        return transformBodyTypeHandler.serialize(httpHeaders.get("content-type"), body, transformClass);
-    }
-
-    public String deserialization() {
-        return transformBodyTypeHandler.deserialize(httpHeaders.get("content-type"), body);
     }
 }

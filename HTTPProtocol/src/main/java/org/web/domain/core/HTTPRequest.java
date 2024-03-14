@@ -3,11 +3,14 @@ package org.web.domain.core;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HTTPRequest extends HTTPProtocol {
     private HTTPMethod httpMethod;
     private HTTPPath httpPath;
     private String httpQueryString;
+    private String httpVersion;
 
     public HTTPMethod getHttpMethod() {
         return httpMethod;
@@ -22,11 +25,41 @@ public class HTTPRequest extends HTTPProtocol {
     }
 
     public void setHttpPath(String path) {
-        this.httpPath = new HTTPPath(path);
+        System.out.println(path);
+        Matcher pathMatcher = parseHttpPath(path);
+        if (!pathMatcher.find()) {
+            return;
+        }
+        this.httpPath = new HTTPPath(parsePath(pathMatcher));
+        setHttpMethod(HTTPMethod.valueOf(parseMethod(pathMatcher)));
+        setHttpMethod(HTTPMethod.valueOf(parseMethod(pathMatcher)));
+        setHttpQueryString(parseQueryString(pathMatcher));
+        setHttpVersion(parsVersion(pathMatcher));
     }
 
     public void setHttpPath(HTTPPath httpPath) {
         this.httpPath = httpPath;
+    }
+
+    private Matcher parseHttpPath(String path) {
+        String pattern = "^(?<method>\\S+)\s+(?<path>[^?]+)\\??(?<queryString>\\S+)?\s+(?<version>\\S+)$";
+        return Pattern.compile(pattern).matcher(path);
+    }
+
+    private String parsePath(Matcher pathMatcher) {
+        return pathMatcher.group("path");
+    }
+
+    private String parseMethod(Matcher pathMatcher) {
+        return pathMatcher.group("method");
+    }
+
+    private String parseQueryString(Matcher pathMatcher) {
+        return pathMatcher.group("queryString");
+    }
+
+    private String parsVersion(Matcher pathMatcher) {
+        return pathMatcher.group("version");
     }
 
     public String getHttpQueryString() {
@@ -35,6 +68,14 @@ public class HTTPRequest extends HTTPProtocol {
 
     public void setHttpQueryString(String httpQueryString) {
         this.httpQueryString = httpQueryString;
+    }
+
+    public String getHttpVersion() {
+        return httpVersion;
+    }
+
+    public void setHttpVersion(String httpVersion) {
+        this.httpVersion = httpVersion;
     }
 
     public <T> Map<String, T> getHttpQueryVariable() {
@@ -52,9 +93,5 @@ public class HTTPRequest extends HTTPProtocol {
             queryVariable.put(item[0], (T) item[1]);
         }
         return queryVariable;
-    }
-
-    public <T> T readBodyAsObject(Class<?> httpRequestClass) {
-        return serialization(httpRequestClass);
     }
 }

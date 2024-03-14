@@ -1,122 +1,37 @@
-import mock.HTTPPOSTRequest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.web.domain.core.HTTPMethod;
 import org.web.domain.core.HTTPRequest;
-import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
-import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class HTTPRequestTestCase {
     /*
         Given
-           HTTP
-               headers:
-                   content-type: application/json
-
-           User info:
-           {
-               "email": "abc@gmail.com",
-               "name": "abc",
-               "password": "hello"
-           }
+           Path: POST /api/users?a=1 HTTP/1.1
 
         When
-            httpRequest readBodyAsObject
+            httpRequest set HttpPath
 
         Then
-            HTTPPOSTRequest
-               email: "abc@gmail.com",
-               name: "abc",
-               password: "hello"
+            HttpMethod: POST
+            HttpPath: /api/users
+            HttpQueryVariable: a = 1
+            HttpVersion: HTTP/1.1
 
      */
     @Test
-    void parserJsonBody(){
+    void parserHttpPath(){
         // Given
         HTTPRequest httpRequest = new HTTPRequest();
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
-        String email = "abc@gmail.com";
-        String name = "abc";
-        String password = "hello";
-        String body = String.format("""
-               {
-                   "email": "%s",
-                   "name": "%s",
-                   "password": "%s"
-               }
-                """, email, name, password);
-        httpRequest.setBody(body);
-        httpRequest.setTransformBodyTypeHandler(new TransformBodyTypeToJsonHandler());
+        String httpPath = "POST /api/users?a=1 HTTP/1.1";
 
         // When
-        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
+        httpRequest.setHttpPath(httpPath);
 
         // Then
-        Assertions.assertEquals(httpPOSTRequest.email, email);
-        Assertions.assertEquals(httpPOSTRequest.name, name);
-        Assertions.assertEquals(httpPOSTRequest.password, password);
-    }
-
-
-    /*
-        Given
-           HTTP
-               headers:
-                   content-type: application/xml
-
-           User info:
-           <?xml version="1.0" encoding="UTF-8"?>
-           <request>
-               <email>abc@gmail.com</email>
-               <age>18</age>
-               <gender>male</gender>
-           </request>
-
-        When
-            httpRequest readBodyAsObject
-
-        Then
-            HTTPPOSTRequest
-               email: "abc@gmail.com",
-               name: "abc",
-               password: "hello"
-
-     */
-    @Test
-    void parserXMLBody(){
-        // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/xml");
-        httpRequest.setHttpHeaders(headers);
-
-        String email = "abc@gmail.com";
-        String name = "abc";
-        String password = "hello";
-        String body = String.format("""
-                <?xml version="1.0" encoding="UTF-8"?>
-                <HTTPPOSTRequest>
-                    <email>%s</email>
-                    <name>%s</name>
-                    <password>%s</password>
-                </HTTPPOSTRequest>
-                """, email, name, password);
-        httpRequest.setBody(body);
-        httpRequest.setTransformBodyTypeHandler(new TransformBodyTypeToXMLHandler());
-
-        // When
-        HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
-
-        // Then
-        Assertions.assertEquals(httpPOSTRequest.email, email);
-        Assertions.assertEquals(httpPOSTRequest.name, name);
-        Assertions.assertEquals(httpPOSTRequest.password, password);
+        Assertions.assertEquals(httpRequest.getHttpMethod(), HTTPMethod.POST);
+        Assertions.assertEquals(httpRequest.getHttpPath().getPath(), "/api/users");
+        Assertions.assertEquals(httpRequest.getHttpQueryVariable().get("a"), "1");
+        Assertions.assertEquals(httpRequest.getHttpVersion(), "HTTP/1.1");
     }
 }

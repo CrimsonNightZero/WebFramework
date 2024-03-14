@@ -1,56 +1,64 @@
 package org.web.domain.core;
 
-import org.web.domain.ext.HTTPListener;
-import org.web.domain.ext.exceptions.NotExpectedExecutionHandler;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HTTPServer {
-    private HTTPListener httpPortListener;
-    private SocketAddress socketAddress;
-    private HTTPHandler httpHandler;
-    protected ExceptionHandler<?> exceptionHandler;
-    protected TransformBodyTypeHandler transformBodyTypeHandler;
+    private final int port;
+    private ServerSocket serverSocket;
+    private final List<HTTPHandler> httpHandlers;
+    private Thread daemon;
 
-    public HTTPServer() {
-        this.exceptionHandler = new NotExpectedExecutionHandler();
+    protected HTTPServer(int port) {
+        this.port = port;
+        this.httpHandlers = new ArrayList<>();
     }
 
-    public void createContext(HTTPHandler httpHandler) {
-        this.httpHandler = httpHandler;
+    public static HTTPServer create(int port) {
+        return new HTTPServer(port);
     }
 
-    public void listen(SocketAddress socketAddress) {
-        this.httpPortListener = new HTTPListener(socketAddress.getPort(), this);
-        socketAddress.subscribe(httpPortListener);
-        this.socketAddress = socketAddress;
+    public void start() {
+        this.daemon = new Thread(this::run);
+        daemon.start();
     }
 
-    public void registerException(ExceptionHandler<?> exceptionHandler) {
-        exceptionHandler.setNext(this.exceptionHandler);
-        this.exceptionHandler = exceptionHandler;
-    }
+    private void run() {
+        try (ServerSocket serverSocket = new ServerSocket()) {
+            this.serverSocket = serverSocket;
+            serverSocket.bind(new InetSocketAddress(port));
+            System.out.println("Server started. Listening for connections on port " + port + "...");
 
-    public void registerTransferDataType(TransformBodyTypeHandler transformBodyTypeHandler) {
-        transformBodyTypeHandler.setNext(this.transformBodyTypeHandler);
-        this.transformBodyTypeHandler = transformBodyTypeHandler;
-    }
-
-    public HTTPResponse response(HTTPRequest httpRequest) {
-        try {
-            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            HTTPResponse response = httpHandler.handle(httpRequest);
-            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            return response;
-        } catch (Throwable ex) {
-            System.out.println(ex);
-            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
-            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            return response;
+            while (serverSocket.isBound()) {
+                Socket clientSocket = serverSocket.accept();
+                response(clientSocket);
+            }
+        } catch (IOException e) {
+            close();
         }
     }
 
+    public void createContext(HTTPHandler httpHandler) {
+        this.httpHandlers.add(httpHandler);
+    }
+
+    public void response(Socket clientSocket) {
+        httpHandlers.forEach(httpHandler -> {
+            httpHandler.setClientSocket(clientSocket);
+            httpHandler.run();
+        });
+    }
+
     public void close() {
-        socketAddress.unsubscribe(httpPortListener);
-        this.httpPortListener = null;
+        try {
+            serverSocket.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        daemon.interrupt();
     }
 }

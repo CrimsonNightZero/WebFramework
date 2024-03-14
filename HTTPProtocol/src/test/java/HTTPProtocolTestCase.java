@@ -4,33 +4,25 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web.domain.core.*;
-import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
-import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
-import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
 public class HTTPProtocolTestCase {
-    private HTTPClient httpClient;
     private HTTPServer httpServer;
     @BeforeEach
     void setUp(){
-        SocketAddress socketAddress = new SocketAddress(80);
-        this.httpClient = new HTTPClient();
-        httpClient.connect(socketAddress);
-
-        this.httpServer = new HTTPServer();
-        httpServer.listen(socketAddress);
+        this.httpServer = HTTPServer.create(8080);
         httpServer.createContext(new DomainController());
-        httpServer.registerTransferDataType(new TransformBodyTypeToTextHandler());
-        httpServer.registerTransferDataType(new TransformBodyTypeToXMLHandler());
-        httpServer.registerTransferDataType(new TransformBodyTypeToJsonHandler());
+        httpServer.start();
     }
     @AfterEach
     void tearDown(){
-        httpClient.close();
         httpServer.close();
     }
     /*
@@ -56,17 +48,9 @@ public class HTTPProtocolTestCase {
                status code: 201
     */
     @Test
-    void sendPOSTRequest(){
+    void sendPOSTRequest() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
+        HttpClient httpClient = HttpClient.newBuilder().build();
 
         String email = "abc@gmail.com";
         String name = "abc";
@@ -78,13 +62,18 @@ public class HTTPProtocolTestCase {
                    "password": "%s"
                }
                 """, email, name, password);
-        httpRequest.setBody(body);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8080/api/users?a=1"))
+                .setHeader("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(201, response.getHttpStatusCode());
+        Assertions.assertEquals(201, response.statusCode());
     }
 
     /*
@@ -120,38 +109,33 @@ public class HTTPProtocolTestCase {
            }
      */
     @Test
-    void sendPATCHRequest(){
+    void sendPATCHRequest() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.PATCH);
-
-        httpRequest.setHttpPath("/api/users/1");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("Authorization", "Bearer <token>");
-        httpRequest.setHttpHeaders(headers);
-
+        HttpClient httpClient = HttpClient.newBuilder().build();
         String newName = "newAbc";
         String body = String.format("""
                {
                    "newName": "%s"
                }
                 """, newName);
-        httpRequest.setBody(body);
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8080/api/users/1"))
+                .setHeader("content-type", "application/json")
+                .setHeader("Authorization", "Bearer <token>")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(body)).build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(200, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        String responseBody = response.getResponseBody();
+        Assertions.assertEquals(200, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("application/json", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        String responseBody = response.body();
         Assertions.assertEquals("""
-                {"password":"hello","name":"newAbc","id":1,"email":"abc@gmail.com"}""", responseBody);
+                {password=hello, name=newAbc, id=1, email=abc@gmail.com}""", responseBody);
     }
 
     /*
@@ -183,31 +167,27 @@ public class HTTPProtocolTestCase {
             ]
      */
     @Test
-    void sendGETRequest(){
+    void sendGETRequest() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
+        HttpClient httpClient = HttpClient.newBuilder().build();
 
-        httpRequest.setHttpMethod(HTTPMethod.GET);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer <token>");
-        httpRequest.setHttpHeaders(headers);
-
-        httpRequest.setHttpQueryString("keyword=abc");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8080/api/users?keyword=abc"))
+                .setHeader("Authorization", "Bearer <token>")
+                .GET()
+                .build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(200, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        String responseBody = response.getResponseBody();
+        Assertions.assertEquals(200, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("application/json", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        String responseBody = response.body();
         Assertions.assertEquals("""
-               [{"name":"abc","id":1,"email":"abc@gmail.com"}]""", responseBody);
+               [{name=abc, id=1, email=abc@gmail.com}]""", responseBody);
     }
 
     /*
@@ -238,18 +218,9 @@ public class HTTPProtocolTestCase {
             User info: Registration's format incorrect.
      */
     @Test
-    void sendExceptionRequest(){
+    void sendExceptionRequest() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
+        HttpClient httpClient = HttpClient.newBuilder().build();
         String email = "efg";
         String name = "efg";
         String password = "hello";
@@ -260,16 +231,20 @@ public class HTTPProtocolTestCase {
                    "password": "%s"
                }
                 """, email, name, password);
-        httpRequest.setBody(body);
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8080/api/users"))
+                .setHeader("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body)).build();
 
         // When
-        HTTPResponse response = httpServer.response(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(400, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals("Registration's format incorrect.", response.getResponseBody());
+        Assertions.assertEquals(400, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals("Registration's format incorrect.", response.body());
     }
 }
