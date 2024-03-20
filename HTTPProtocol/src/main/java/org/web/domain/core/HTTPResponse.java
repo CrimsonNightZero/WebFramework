@@ -2,7 +2,7 @@ package org.web.domain.core;
 
 public class HTTPResponse extends HTTPProtocol {
     private String httpVersion;
-    private final int httpStatusCode;
+    private int httpStatusCode;
 
     public HTTPResponse(int httpStatusCode) {
         this.httpVersion = "HTTP/1.1";
@@ -15,6 +15,10 @@ public class HTTPResponse extends HTTPProtocol {
 
     public int getHttpStatusCode() {
         return httpStatusCode;
+    }
+
+    public void setHttpStatusCode(int httpStatusCode) {
+        this.httpStatusCode = httpStatusCode;
     }
 
     public String getResponseBody() {

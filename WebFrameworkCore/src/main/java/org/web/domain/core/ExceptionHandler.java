@@ -22,7 +22,7 @@ public abstract class ExceptionHandler<T extends Exception> {
         return matchThrownException(throwable) ? response(httpRequest, throwable) : next.handle(httpRequest, throwable);
     }
 
-    private boolean matchThrownException(Throwable throwable) {
+    protected boolean matchThrownException(Throwable throwable) {
         return throwable.getClass().equals(exception);
     }
 

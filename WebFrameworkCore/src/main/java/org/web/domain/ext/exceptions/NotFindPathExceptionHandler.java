@@ -2,7 +2,7 @@ package org.web.domain.ext.exceptions;
 
 import org.web.domain.core.ExceptionHandler;
 import org.web.domain.core.HTTPRequest;
-import org.web.infrastructure.exceptions.NotFindPathException;
+import org.web.domain.core.exceptions.NotFindPathException;
 
 public class NotFindPathExceptionHandler extends ExceptionHandler<NotFindPathException> {
 

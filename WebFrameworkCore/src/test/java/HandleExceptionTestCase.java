@@ -1,32 +1,33 @@
-import mock.DomainController;
-import mock.DomainService;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.web.domain.core.*;
-import org.web.domain.ext.HTTPRequestScope;
+import org.web.domain.core.Container;
+import org.web.domain.core.Router;
+import org.web.domain.core.WebApplication;
 import org.web.domain.ext.PrototypeScope;
 import org.web.domain.ext.SingletonScope;
 import org.web.domain.ext.protocol.TransformBodyTypeToJsonHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToTextHandler;
 import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 
-import java.util.HashMap;
-import java.util.Map;
+import mock.DomainController;
+import mock.DomainService;
 
 public class HandleExceptionTestCase {
     private WebApplication webApplication;
-    private HTTPClient httpClient;
 
     @BeforeEach
     void setUp(){
-        SocketAddress socketAddress = new SocketAddress(80);
-        this.httpClient = new HTTPClient();
-        httpClient.connect(socketAddress);
-
-        this.webApplication = new WebApplication();
-        webApplication.listen(socketAddress);
+        this.webApplication = new WebApplication(8080);
 
         Container container = webApplication.getContainer();
         container.register(DomainController.class, new SingletonScope());
@@ -40,11 +41,12 @@ public class HandleExceptionTestCase {
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToJsonHandler());
+
+        webApplication.launch();
     }
 
     @AfterEach
     void close(){
-        httpClient.close();
         webApplication.close();
     }
     /*
@@ -68,24 +70,24 @@ public class HandleExceptionTestCase {
                body: Cannot find the path "/api/notfound"
     */
     @Test
-    void notFindPath(){
+    void notFindPath() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-        httpRequest.setHttpPath("/api/notfound");
+
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8080/api/notfound"))
+                .setHeader("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody()).build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(404, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals("Cannot find the path /api/notfound", response.getResponseBody());
+        Assertions.assertEquals(404, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals("Cannot find the path /api/notfound", response.body());
     }
 
     /*
@@ -109,24 +111,24 @@ public class HandleExceptionTestCase {
                body: The method "DELETE" is not allowed on "/api/users"
     */
     @Test
-    void notAllowedMethod(){
+    void notAllowedMethod() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-        httpRequest.setHttpMethod(HTTPMethod.DELETE);
-        httpRequest.setHttpPath("/api/users");
+        HttpClient httpClient = HttpClient.newBuilder().build();
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .DELETE()
+                .uri(URI.create("http://127.0.0.1:8080/api/users"))
+                .setHeader("content-type", "application/json").build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(405, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals("The method DELETE is not allowed on /api/users", response.getResponseBody());
+        Assertions.assertEquals(405, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals("The method DELETE is not allowed on /api/users", response.body());
     }
 
     /*
@@ -154,14 +156,9 @@ public class HandleExceptionTestCase {
                body: The exception is not expected
     */
     @Test
-    void notExpectedExecution(){
+    void notExpectedExecution() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = new HTTPRequest();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-        httpRequest.setHttpPath("/api/users");
+        HttpClient httpClient = HttpClient.newBuilder().build();
 
         String email = "abc@gmail.com";
         int name = 1;
@@ -173,16 +170,21 @@ public class HandleExceptionTestCase {
                    "password" %d
                }
                 """, email, name, password);
-        httpRequest.setBody(body);
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .uri(URI.create("http://127.0.0.1:8080/api/users"))
+                .header("content-type", "application/json")
+                .build();
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(500, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals("The exception is not expected", response.getResponseBody());
+        Assertions.assertEquals(500, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals("The exception is not expected", response.body());
     }
 }

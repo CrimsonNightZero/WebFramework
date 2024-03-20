@@ -11,6 +11,7 @@ public abstract class HTTPProtocol {
     protected Object body;
 
     public HTTPProtocol() {
+        this.httpHeaders = new HashMap<>();
     }
 
     public Map<String, String> getHttpHeaders() {

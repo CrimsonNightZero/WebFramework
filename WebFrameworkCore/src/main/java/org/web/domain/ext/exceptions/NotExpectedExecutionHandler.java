@@ -10,6 +10,11 @@ public class NotExpectedExecutionHandler extends ExceptionHandler<RuntimeExcepti
     }
 
     @Override
+    protected boolean matchThrownException(Throwable throwable) {
+        return true;
+    }
+
+    @Override
     protected String getExceptionMessage(HTTPRequest httpRequest, Throwable throwable) {
         return "The exception is not expected";
     }

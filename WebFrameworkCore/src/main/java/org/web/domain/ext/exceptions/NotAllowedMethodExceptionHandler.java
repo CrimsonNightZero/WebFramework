@@ -2,7 +2,7 @@ package org.web.domain.ext.exceptions;
 
 import org.web.domain.core.ExceptionHandler;
 import org.web.domain.core.HTTPRequest;
-import org.web.infrastructure.exceptions.NotAllowedMethodException;
+import org.web.domain.core.exceptions.NotAllowedMethodException;
 
 public class NotAllowedMethodExceptionHandler extends ExceptionHandler<NotAllowedMethodException> {
 

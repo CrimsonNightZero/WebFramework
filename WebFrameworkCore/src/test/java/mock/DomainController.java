@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.web.domain.core.HTTPRequest;
 import org.web.domain.core.HTTPResponse;
 
 public class DomainController {
@@ -23,10 +22,9 @@ public class DomainController {
         return domainService;
     }
 
-    public HTTPResponse post(HTTPRequest httpRequest) {
+    public HTTPResponse post(HTTPPOSTRequest httpRequest) {
         try {
-            HTTPPOSTRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPPOSTRequest.class);
-            domainService.validEmail(httpPOSTRequest);
+            domainService.validEmail(httpRequest);
             return new HTTPResponse(201);
         } catch (IllegalArgumentException ex) {
             HTTPResponse httpResponse = new HTTPResponse(400);
@@ -39,7 +37,7 @@ public class DomainController {
         }
     }
 
-    public HTTPResponse patch(HTTPRequest httpRequest) {
+    public HTTPResponse patch() {
         HTTPResponse httpResponse = new HTTPResponse(200);
         Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "application/json");
@@ -55,7 +53,7 @@ public class DomainController {
         return httpResponse;
     }
 
-    public HTTPResponse get(HTTPRequest httpRequest) {
+    public HTTPResponse get() {
         HTTPResponse httpResponse = new HTTPResponse(200);
         Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "application/json");

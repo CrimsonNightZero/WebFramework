@@ -1,22 +1,31 @@
 package org.web.domain.core;
 
 import org.web.domain.ext.exceptions.NotAllowedMethodExceptionHandler;
+import org.web.domain.ext.exceptions.NotExpectedExecutionHandler;
 import org.web.domain.ext.exceptions.NotFindPathExceptionHandler;
 
-public class WebApplication extends HTTPServer {
+public class WebApplication {
+    private final HTTPServer httpServer;
     private final Container container;
     private final Router router;
 
-    public WebApplication() {
+    public WebApplication(int port) {
+        this.httpServer = HTTPServer.create(port);
         this.container = new Container();
         this.router = new Router();
         router.setWebApplication(this);
+        httpServer.createContext(router);
         registerBaseException();
     }
 
+    public void launch(){
+        httpServer.start();
+    }
+
     private void registerBaseException() {
-        registerException(new NotFindPathExceptionHandler());
-        registerException(new NotAllowedMethodExceptionHandler());
+        router.registerException(new NotExpectedExecutionHandler());
+        router.registerException(new NotFindPathExceptionHandler());
+        router.registerException(new NotAllowedMethodExceptionHandler());
     }
 
     public Router getRouter() {
@@ -27,27 +36,15 @@ public class WebApplication extends HTTPServer {
         return container;
     }
 
-    public HTTPResponse response(HTTPRequest httpRequest) {
-        try {
-            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            HTTPResponse response = router.execute(httpRequest);
-            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            return response;
-        } catch (Throwable ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-            httpRequest.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            HTTPResponse response = exceptionHandler.handle(httpRequest, ex);
-            response.setTransformBodyTypeHandler(transformBodyTypeHandler);
-            return response;
-        }
-    }
-
-    public void addException(ExceptionHandler exceptionHandler) {
-        registerException(exceptionHandler);
+    public void addException(ExceptionHandler<?> exceptionHandler){
+        router.registerException(exceptionHandler);
     }
 
     public void addDataTypePlugin(TransformBodyTypeHandler transformBodyTypeHandler) {
-        registerTransferDataType(transformBodyTypeHandler);
+        router.registerTransferDataType(transformBodyTypeHandler);
+    }
+
+    public void close(){
+        httpServer.close();
     }
 }

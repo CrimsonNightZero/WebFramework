@@ -25,7 +25,6 @@ public class HTTPRequest extends HTTPProtocol {
     }
 
     public void setHttpPath(String path) {
-        System.out.println(path);
         Matcher pathMatcher = parseHttpPath(path);
         if (!pathMatcher.find()) {
             return;

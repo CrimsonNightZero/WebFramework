@@ -12,8 +12,12 @@ public abstract class TransformBodyTypeHandler {
     }
 
     public <T> T serialize(String contentType, Object body, Class<?> transformClass) {
-        return matchContentType(contentType) ? toObject(body, transformClass)
-                : next.serialize(contentType, body, transformClass);
+        if (matchContentType(contentType)){
+            return toObject(body, transformClass);
+        } else if (next != null) {
+            return next.serialize(contentType, body, transformClass);
+        }
+        return null;
     }
 
     protected abstract boolean matchContentType(String contentType);
@@ -21,7 +25,12 @@ public abstract class TransformBodyTypeHandler {
     protected abstract <T> T toObject(Object body, Class<?> transformClass);
 
     public String deserialize(String contentType, Object body) {
-        return matchContentType(contentType) ? toContent(body) : next.deserialize(contentType, body);
+        if (matchContentType(contentType)){
+            return toContent(body);
+        } else if (next != null) {
+            return next.deserialize(contentType, body);
+        }
+        return "";
     }
 
     protected abstract String toContent(Object body);
