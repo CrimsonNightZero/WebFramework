@@ -8,34 +8,37 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 public abstract class HTTPHandler {
-    private Socket clientSocket;
+    protected Socket clientSocket;
 
     public void setClientSocket(Socket clientSocket) {
         this.clientSocket = clientSocket;
     }
 
-    // @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-            writeResponse(handle(readRequest(reader)));
-            clientSocket.close();
-        } catch (IOException e) {
+        try{
+            writeResponse(handle(readRequest(getBufferedReader())));
+            close();
+        } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    protected BufferedReader getBufferedReader() throws IOException {
+        return new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
     protected HTTPRequest readRequest(BufferedReader reader) throws IOException {
         HTTPRequest httpRequest = new HTTPRequest();
         httpRequest.setHttpPath(getRequestPath(reader));
         httpRequest.setHttpHeaders(getRequestHeaders(reader));
-        httpRequest.setBody(getRequestBody(reader));
+        httpRequest.setBody(getRequestBody(reader, Integer.parseInt(httpRequest.getHttpHeaders().get("content-length"))));
         return httpRequest;
     }
 
-    private static String getRequestBody(BufferedReader reader) throws IOException {
+    private static String getRequestBody(BufferedReader reader, int contentLength) throws IOException {
         StringBuilder requestBody = new StringBuilder();
-        while (reader.ready()) {
+        while (requestBody.length() != contentLength) {
             requestBody.append((char) reader.read());
         }
         return requestBody.toString();
@@ -61,5 +64,9 @@ public abstract class HTTPHandler {
         writer.flush();
     }
 
-    protected abstract HTTPResponse handle(HTTPRequest httpRequest);
+    protected void close() throws IOException {
+        clientSocket.close();
+    }
+
+    protected abstract HTTPResponse handle(HTTPRequest httpRequest) throws Throwable;
 }

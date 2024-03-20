@@ -13,7 +13,7 @@ public class HTTPServer {
     private final List<HTTPHandler> httpHandlers;
     private Thread daemon;
 
-    protected HTTPServer(int port) {
+    private HTTPServer(int port) {
         this.port = port;
         this.httpHandlers = new ArrayList<>();
     }
