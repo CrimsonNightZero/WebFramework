@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.web.application.DomainService;
 import org.web.application.HTTPLoginRequest;
@@ -19,36 +18,19 @@ import org.web.domain.exceptions.IncorrectFormatOfEmailException;
 import org.web.domain.exceptions.InvalidNameFormatException;
 import org.web.infrastructure.dto.RegisterUserDTO;
 import org.web.infrastructure.dto.UserLoginDTO;
+import org.web.infrastructure.dto.UserQueriesDTO;
 import org.web.infrastructure.dto.UserQueryDTO;
 
 public class DomainController {
-    public DomainService domainService;
-    public Map<String, User> tokens;
+    private final DomainService domainService;
+    private final Map<String, User> tokens;
 
     public DomainController(DomainService domainService) {
         this.domainService = domainService;
         this.tokens = new HashMap<>();
     }
 
-    public void setDomainService(DomainService domainService) {
-        this.domainService = domainService;
-    }
-
-    public DomainService getDomainService() {
-        return domainService;
-    }
-
-    public Map<String, User> getTokens() {
-        return tokens;
-    }
-
-    public void setTokens(Map<String, User> tokens) {
-        this.tokens = tokens;
-    }
-
-    public HTTPResponse registerUser(HTTPRequest httpRequest) {
-        HTTPRegisterRequest httpPOSTRequest = httpRequest.readBodyAsObject(HTTPRegisterRequest.class);
-
+    public HTTPResponse registerUser(HTTPRegisterRequest httpPOSTRequest) {
         User user;
         try {
             user = domainService.registerUser(httpPOSTRequest);
@@ -56,18 +38,10 @@ public class DomainController {
             throw new IncorrectFormatOfEmailException("Registration's format incorrect.");
         }
 
-        HTTPResponse httpResponse = new HTTPResponse(201);
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("content-encoding", "UTF-8");
-        httpResponse.setHttpHeaders(headers);
-        httpResponse.setBody(new RegisterUserDTO(user.getId(), user.getEmail(), user.getName()));
-        return httpResponse;
+        return new RegisterUserDTO(user).response();
     }
 
-    public HTTPResponse login(HTTPRequest httpRequest) {
-        HTTPLoginRequest httpLoginRequest = httpRequest.readBodyAsObject(HTTPLoginRequest.class);
-
+    public UserLoginDTO login(HTTPLoginRequest httpLoginRequest) {
         User user;
         try {
             user = domainService.login(httpLoginRequest);
@@ -78,20 +52,13 @@ public class DomainController {
         String token = String.valueOf(UUID.randomUUID());
         tokens.put(token, user);
 
-        HTTPResponse httpResponse = new HTTPResponse(200);
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("content-encoding", "UTF-8");
-        httpResponse.setHttpHeaders(headers);
-        httpResponse.setBody(new UserLoginDTO(user.getId(), user.getEmail(), user.getName(), token));
-        return httpResponse;
+        return new UserLoginDTO(user, token);
     }
 
-    public HTTPResponse rename(HTTPRequest httpRequest) {
-        String authorization = httpRequest.getHttpHeaders().get("Authorization");
+    public HTTPResponse rename(HTTPRenameRequest httpRenameRequest, HTTPRequest httpRequest) {
+        String authorization = httpRequest.getHttpHeaders().get("authorization");
         Map<String, Object> pathVariable = httpRequest.getHttpPath().getPathVariable();
         int userId = Integer.parseInt(pathVariable.get("userId").toString());
-        HTTPRenameRequest httpRenameRequest = httpRequest.readBodyAsObject(HTTPRenameRequest.class);
         httpRenameRequest.id = userId;
         validToken(authorization);
         validPermission(authorization, userId);
@@ -127,8 +94,8 @@ public class DomainController {
         return authorization.replace("Bearer ", "").strip();
     }
 
-    public HTTPResponse userQuery(HTTPRequest httpRequest) {
-        String authorization = httpRequest.getHttpHeaders().get("Authorization");
+    public List<UserQueryDTO> userQuery(HTTPRequest httpRequest) {
+        String authorization = httpRequest.getHttpHeaders().get("authorization");
         validToken(authorization);
         Map<String, Object> httpQueryVariable = httpRequest.getHttpQueryVariable();
         List<User> users;
@@ -138,12 +105,6 @@ public class DomainController {
             users = domainService.userQuery();
         }
 
-        HTTPResponse httpResponse = new HTTPResponse(200);
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("content-encoding", "UTF-8");
-        httpResponse.setHttpHeaders(headers);
-        httpResponse.setBody(users.stream().map(UserQueryDTO::new).collect(Collectors.toList()));
-        return httpResponse;
+        return new UserQueriesDTO(users).response();
     }
 }

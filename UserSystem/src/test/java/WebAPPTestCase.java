@@ -16,22 +16,21 @@ import org.web.domain.ext.protocol.TransformBodyTypeToXMLHandler;
 import org.web.infrastructure.FileUtil;
 import org.web.infrastructure.exceptions.*;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public class WebAPPTestCase {
-    private HTTPClient httpClient;
     private WebApplication webApplication;
 
     @BeforeEach
     void setUp(){
-        SocketAddress socketAddress = new SocketAddress(80);
-        this.httpClient = new HTTPClient();
-        httpClient.connect(socketAddress);
-
-        this.webApplication = new WebApplication();
-        webApplication.listen(socketAddress);
+        this.webApplication = new WebApplication(8080);
 
         Container container = webApplication.getContainer();
         container.register(DomainController.class, new SingletonScope());
@@ -46,10 +45,10 @@ public class WebAPPTestCase {
         webApplication.addDataTypePlugin(new TransformBodyTypeToTextHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToXMLHandler());
         webApplication.addDataTypePlugin(new TransformBodyTypeToJsonHandler());
+        webApplication.launch();
     }
     @AfterEach
     void tearDown(){
-        httpClient.close();
         webApplication.close();
     }
 
@@ -86,19 +85,21 @@ public class WebAPPTestCase {
             }
      */
     @Test
-    void UserRegistration(){
+    void UserRegistration() throws IOException, InterruptedException {
         // Given
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        HttpRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(201, response.getHttpStatusCode());
-        Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
-        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
+        Assertions.assertEquals(201, response.statusCode());
+        Map<String, List<String>> headers = response.headers().map();
+        Assertions.assertEquals("application/json", headers.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", headers.get("content-encoding").get(0));
         Assertions.assertEquals("""
-                {"id":1,"email":"abc@gmail.com","name":"abcabc"}""", response.getResponseBody());
+                {"id":1,"email":"abc@gmail.com","name":"abcabc"}""", response.body());
     }
 
     /*
@@ -131,33 +132,25 @@ public class WebAPPTestCase {
                 responseBody: Duplicate email
      */
     @Test
-    void UserRegistrationOnDuplicateEmailFail(){
+    void UserRegistrationOnDuplicateEmailFail() throws IOException, InterruptedException {
         // Given
         webApplication.addException(new DuplicateEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        HttpRequest httpRequest = getHttpRegisterRequest("abc@gmail.com", "abcabc");
 
         // When
-        httpClient.send(httpRequest);
-        HTTPResponse response = httpClient.send(httpRequest);
+        httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(400, response.getHttpStatusCode());
-        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
-        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
-        Assertions.assertEquals("Duplicate email", response.getResponseBody());
+        Assertions.assertEquals(400, response.statusCode());
+        Map<String, List<String>> headers = response.headers().map();
+        Assertions.assertEquals("plain/text", headers.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", headers.get("content-encoding").get(0));
+        Assertions.assertEquals("Duplicate email", response.body());
     }
 
-    private static HTTPRequest getHttpRegisterRequest(String email, String name) {
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
+    private static HttpRequest getHttpRegisterRequest(String email, String name) {
         String password = "hello";
         String body = String.format("""
                 {
@@ -166,8 +159,11 @@ public class WebAPPTestCase {
                     "password": "%s"
                 }
                  """, email, name, password);
-        httpRequest.setBody(body);
-        return httpRequest;
+        return HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .uri(URI.create("http://127.0.0.1:8080/api/users"))
+                .setHeader("content-type", "application/json")
+                .build();
     }
 
     /*
@@ -199,19 +195,20 @@ public class WebAPPTestCase {
                 responseBody: Registration's format incorrect.
      */
     @Test
-    void UserRegistrationOnIncorrectFormatOfRegistrationFail(){
+    void UserRegistrationOnIncorrectFormatOfRegistrationFail() throws IOException, InterruptedException {
         // Given
+        HttpClient httpClient = HttpClient.newBuilder().build();
         webApplication.addException(new IncorrectFormatOfEmailHandler());
-        HTTPRequest httpRequest = getHttpRegisterRequest("abcabc", "abcabc");
+        HttpRequest httpRequest = getHttpRegisterRequest("abcabc", "abcabc");
 
-        // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(400, response.getHttpStatusCode());
-        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
-        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
-        Assertions.assertEquals("Registration's format incorrect.", response.getResponseBody());
+        Assertions.assertEquals(400, response.statusCode());
+        Map<String, List<String>> headers = response.headers().map();
+        Assertions.assertEquals("plain/text", headers.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", headers.get("content-encoding").get(0));
+        Assertions.assertEquals("Registration's format incorrect.", response.body());
     }
 
     /*
@@ -247,37 +244,29 @@ public class WebAPPTestCase {
             }
      */
     @Test
-    void UserLogin(){
+    void UserLogin() throws IOException, InterruptedException {
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
 
-        HTTPRequest httpRequest = getHttpLoginRequest("abc@gmail.com");
+        HttpRequest httpRequest = getHttpLoginRequest("abc@gmail.com");
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(200, response.getHttpStatusCode());
-        Assertions.assertEquals("application/json", response.getHttpHeaders().get("content-type"));
-        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
-        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(response.getResponseBody(), UserLoginDTO.class);
+        Assertions.assertEquals(200, response.statusCode());
+        Map<String, List<String>> headers = response.headers().map();
+        Assertions.assertEquals("application/json", headers.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", headers.get("content-encoding").get(0));
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(response.body(), UserLoginDTO.class);
         Assertions.assertEquals(1, userLoginDTO.id);
         Assertions.assertEquals("abcabc", userLoginDTO.name);
         Assertions.assertEquals("abc@gmail.com", userLoginDTO.email);
         Assertions.assertNotNull(userLoginDTO.token);
     }
 
-    private static HTTPRequest getHttpLoginRequest(String email) {
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.POST);
-
-        httpRequest.setHttpPath("/api/users/login");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        httpRequest.setHttpHeaders(headers);
-
+    private static HttpRequest getHttpLoginRequest(String email) {
         String password = "hello";
         String body = String.format("""
                {
@@ -285,8 +274,11 @@ public class WebAPPTestCase {
                    "password": "%s"
                }
                 """, email, password);
-        httpRequest.setBody(body);
-        return httpRequest;
+        return HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .uri(URI.create("http://127.0.0.1:8080/api/users/login"))
+                .setHeader("content-type", "application/json")
+                .build();
     }
 
     /*
@@ -317,22 +309,24 @@ public class WebAPPTestCase {
      */
     @ParameterizedTest
     @MethodSource
-    void userLoginOnFail(String email, int statusCode, String responseBody){
+    void userLoginOnFail(String email, int statusCode, String responseBody) throws IOException, InterruptedException {
         // Given
         webApplication.addException(new CredentialsInvalidHandler());
         webApplication.addException(new IncorrectFormatOfEmailHandler());
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
 
-        HTTPRequest httpRequest = getHttpLoginRequest(email);
+        HttpRequest httpRequest = getHttpLoginRequest(email);
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(statusCode, response.getHttpStatusCode());
-        Assertions.assertEquals("plain/text", response.getHttpHeaders().get("content-type"));
-        Assertions.assertEquals("UTF-8", response.getHttpHeaders().get("content-encoding"));
-        Assertions.assertEquals(responseBody, response.getResponseBody());
+        Assertions.assertEquals(statusCode, response.statusCode());
+        Map<String, List<String>> headers = response.headers().map();
+        Assertions.assertEquals("plain/text", headers.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", headers.get("content-encoding").get(0));
+        Assertions.assertEquals(responseBody, response.body());
     }
 
     private static Stream<Arguments> userLoginOnFail(){
@@ -364,40 +358,34 @@ public class WebAPPTestCase {
                 status code: 204
      */
     @Test
-    void UserRename(){
+    void UserRename() throws IOException, InterruptedException {
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
-        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"), HttpResponse.BodyHandlers.ofString());
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.body(), UserLoginDTO.class);
 
-        HTTPRequest httpRequest = getHttpRenameRequest(userLoginDTO.token, 1, "newAbc");
+        HttpRequest httpRequest = getHttpRenameRequest(userLoginDTO.token, 1, "newAbc");
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(204, response.getHttpStatusCode());
+        Assertions.assertEquals(204, response.statusCode());
     }
 
-    private static HTTPRequest getHttpRenameRequest(String token, int id, String name) {
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.PATCH);
-
-        httpRequest.setHttpPath(String.format("/api/users/%d", id));
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("Authorization", String.format("Bearer %s", token));
-        httpRequest.setHttpHeaders(headers);
-
+    private static HttpRequest getHttpRenameRequest(String token, int id, String name) {
         String body = String.format("""
                {
                    "newName": "%s"
                }
                 """, name);
-        httpRequest.setBody(body);
-        return httpRequest;
+        return HttpRequest.newBuilder()
+                .method(HTTPMethod.PATCH.name(), HttpRequest.BodyPublishers.ofString(body))
+                .uri(URI.create(String.format("http://127.0.0.1:8080/api/users/%d", id)))
+                .header("content-type", "application/json")
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
     }
 
     /* // {isLegalToken: false, userId: 1, newName: "newAbc", statusCode: 401, responseBody: Can't authenticate who you are.}
@@ -428,25 +416,26 @@ public class WebAPPTestCase {
      */
     @ParameterizedTest
     @MethodSource
-    void UserRenameOnFail(boolean isLegalToken, int userId, String newName, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler){
+    void UserRenameOnFail(boolean isLegalToken, int userId, String newName, int statusCode, String responseBody, ExceptionHandler<?> exceptionHandler) throws IOException, InterruptedException {
         // Given
         webApplication.addException(exceptionHandler);
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
-        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"), HttpResponse.BodyHandlers.ofString());
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.body(), UserLoginDTO.class);
         String token = isLegalToken? userLoginDTO.token: "";
 
-        HTTPRequest httpRequest = getHttpRenameRequest(token, userId, newName);
+        HttpRequest httpRequest = getHttpRenameRequest(token, userId, newName);
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(statusCode, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals(responseBody, response.getResponseBody());
+        Assertions.assertEquals(statusCode, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals(responseBody, response.body());
     }
 
     private static Stream<Arguments> UserRenameOnFail(){
@@ -492,39 +481,34 @@ public class WebAPPTestCase {
      */
     @ParameterizedTest
     @MethodSource()
-    void UserQuery(String queryString, String responseBody){
+    void UserQuery(String queryString, String responseBody) throws IOException, InterruptedException {
         // Given
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
-        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"));
-        HTTPResponse loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"));
-        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.getResponseBody(), UserLoginDTO.class);
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> loginResponse = httpClient.send(getHttpLoginRequest("abc@gmail.com"), HttpResponse.BodyHandlers.ofString());
+        UserLoginDTO userLoginDTO = (UserLoginDTO) FileUtil.readJsonValue(loginResponse.body(), UserLoginDTO.class);
 
-        HTTPRequest httpRequest = getHttpUserQueryRequest(userLoginDTO.token, queryString);
+        HttpRequest httpRequest = getHttpUserQueryRequest(userLoginDTO.token, queryString);
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(200, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("application/json", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals(responseBody, response.getResponseBody());
+        Assertions.assertEquals(200, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("application/json", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals(responseBody, response.body());
     }
 
-    private static HTTPRequest getHttpUserQueryRequest(String token, String queryString) {
-        HTTPRequest httpRequest = new HTTPRequest();
-
-        httpRequest.setHttpMethod(HTTPMethod.GET);
-
-        httpRequest.setHttpPath("/api/users");
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("content-type", "application/json");
-        headers.put("Authorization", String.format("Bearer %s", token));
-        httpRequest.setHttpHeaders(headers);
-        httpRequest.setHttpQueryString(queryString);
-        return httpRequest;
+    private static HttpRequest getHttpUserQueryRequest(String token, String queryString) {
+        return HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://127.0.0.1:8080/api/users?" + queryString))
+                .header("content-type", "application/json")
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
     }
 
     private static Stream<Arguments> UserQuery(){
@@ -558,22 +542,23 @@ public class WebAPPTestCase {
                     Can't authenticate who you are.
      */
     @Test
-    void UserQueryOnFail(){
+    void UserQueryOnFail() throws IOException, InterruptedException {
         // Given
         webApplication.addException(new IllegalAuthenticationHandler());
-        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"));
-        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"));
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        httpClient.send(getHttpRegisterRequest("abc@gmail.com", "abcabc"), HttpResponse.BodyHandlers.ofString());
+        httpClient.send(getHttpRegisterRequest("def@gmail.com", "defdef"), HttpResponse.BodyHandlers.ofString());
 
-        HTTPRequest httpRequest = getHttpUserQueryRequest("0", "keyword=abc");
+        HttpRequest httpRequest = getHttpUserQueryRequest("0", "keyword=abc");
 
         // When
-        HTTPResponse response = httpClient.send(httpRequest);
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        Assertions.assertEquals(401, response.getHttpStatusCode());
-        Map<String, String> httpHeaders = response.getHttpHeaders();
-        Assertions.assertEquals("plain/text", httpHeaders.get("content-type"));
-        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding"));
-        Assertions.assertEquals("Can't authenticate who you are.", response.getResponseBody());
+        Assertions.assertEquals(401, response.statusCode());
+        Map<String, List<String>> httpHeaders = response.headers().map();
+        Assertions.assertEquals("plain/text", httpHeaders.get("content-type").get(0));
+        Assertions.assertEquals("UTF-8", httpHeaders.get("content-encoding").get(0));
+        Assertions.assertEquals("Can't authenticate who you are.", response.body());
     }
 }
