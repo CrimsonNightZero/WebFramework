@@ -155,3 +155,8 @@ Server started. Listening for connections on port 8080...
 |id|int |
 |email|string |
 |name|string |
+
+---
+## Contact me
+
+If you are curious about the project, I have OOA and OOD design diagrams. Feel free to contact me to discuss anything you find interesting.
