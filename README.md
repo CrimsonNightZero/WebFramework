@@ -2,44 +2,54 @@
 
 The research project goal to understand what is a web framework tech stack.
 
-The project include three important parts:
-1. HTTP Protocol: The client can send a request, and then the server listens on a socket port. When the server receives the data, it processes from request to responsse.
-2. Core Web Framework: This core framework provides developers with tools to quickly build their own services.
-3. Domain Service: Developers build domain-specific services using the web framework. This is easy user login system.
+The project includes three important parts:
+1. HTTP Protocol: The client can send a request, and then the server listens on a socket port. When the server receives the data, it processes it from request to response.
+2. Core Web Framework: This core framework provides developers with tools to build their services quickly.
+3. Domain Service: Developers build domain-specific services using the web framework. This is an easily user login system.
 
 ## HTTP protocol
 
 * The client can send an HTTP request. 
 * The HTTP request deserializes HTTP information, including the method, path, query, body, and headers, and then the server handles these requests. 
-* When the request task is finished, the server serializes the data into an HTTP response. 
+* When the requested task is finished, the server serializes the data into an HTTP response. 
 * Finally, the client receives data from the HTTP response.
 
 ## Core WebFramework
 
-Current core stack including the following components:
+The current core stack includes the following components:
 * Router:
-  * Developer can define controller, including request and response infomation.
-  * The router will automatically reflect the defined request and reponse to target class.
-  * Finally, you can easily procees received request and transfer response using your injection service.
-* TransformBodyTypeHandler: 
-* ExceptionHandler: 
-* Container: 
+  * Developer can define controller, including request and response information.
+  * The router will automatically reflect the defined request and response to the target class.
+  * Finally, you can easily process received requests and transfer responses using your injection service.
+* TransformBodyTypeHandler:
+  * When received a request needs to be deserialized and the transferred response needs to be serialized.
+  * TransformBodyTypeHandler will transform your defined data type to offer developers convenient usage. 
+* ExceptionHandler:
+  * If the service encounters any exceptions, you want to respond with a response-specific status code, message, and so on.
+  * ExceptionHandler can reduce the time needed to wrap the response format and efficiently decouple your code.
+  * You just need to define handling exceptions and register a custom ExceptionHandler, ExceptionHandler will automatically handle exceptions. 
+* Container:
+  * Container helps the system maintain the injection state in your controller and service, preventing your service from recreating the injection object with every request.
+  * You can freely choose injected objects and how to maintain the object state.
   
 ## Domain Service
 
-* Application
-* Domain
-* Infrastructure
+* Application:
+  * 
+* Domain:
+  * 
+* Infrastructure:
+  * 
 
 ## Running service
 
 1. Locate the package named `UserSystem`.
 2. Run `Main.java`
-3. You will can see following infomation indicating that the service has successfully started on port 8080:
+3. You will see the following information indicating that the service has successfully started on port 8080:
 ```
 Server started. Listening for connections on port 8080...
 ```
-4. At the point, you can try to send an HTTP request using Postman or any browser or in any other way.
+4. At this point, you can try to send an HTTP request using Postman or any browser or in any other way.
 
 ## API 
 
