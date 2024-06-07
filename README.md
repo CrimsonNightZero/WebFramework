@@ -17,6 +17,7 @@ The project includes three important parts:
 ## Core WebFramework
 
 The current core stack includes the following components:
+
 * Router:
   * Developer can define controller, including request and response information.
   * The router will automatically reflect the defined request and response to the target class.
@@ -34,12 +35,16 @@ The current core stack includes the following components:
   
 ## Domain Service
 
-* Application:
-  * 
-* Domain:
-  * 
-* Infrastructure:
-  * 
+The service follows clean architecture and domain-driven design concepts in building its architecture
+
+* Domain layer:
+  * This layer contains core domain knowledge of service, allowing you to wrap rich product domains and iteratively your best product.
+  * To maintain clarity, this layer should not depend on any other layers.
+* Infrastructure layer:
+  * This layer's main responsibility is handling external data or services.
+  * You can define controllers to receive requests and transfer responses, access your database, manage third-party API, and so on.
+* Application layer:
+  * This layer facilitates communication between the domain layer and the infrastructure layer for each use case.
 
 ## Running service
 
