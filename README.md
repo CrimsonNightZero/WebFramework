@@ -56,6 +56,9 @@ Server started. Listening for connections on port 8080...
 ```
 4. At this point, you can try to send an HTTP request using Postman or any browser or in any other way.
 
+## System Designing Diagram
+![alt_text](https://github.com/clarkwtc/WebFramework/blob/5f47aa7b8c0e1eebf220c4807183f46c297371aa/images/Webframework.png)
+
 ## API 
 
 ### RegisterUser 
